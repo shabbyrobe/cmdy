@@ -1,4 +1,4 @@
-package cmdy
+package args
 
 import (
 	"fmt"

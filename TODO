@@ -6,7 +6,7 @@
 - Values struct should not rely on interface{}
 - Above the fold/below the fold help message
 - Bash completion
-- Argument handling like flag handling
 - Automatic usage string
 - Enumerate flags, when invalid flag detected for child command but detected in parent, offer help.
+- Argument handling help
 
