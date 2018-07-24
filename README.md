@@ -10,6 +10,14 @@ to what I'm aiming for, but it's a start.
 Please don't use this yet.
 
 
+Features
+--------
+
+- `ArgSet`, similar to `flag.FlagSet` but for positional arguments
+- Simple subcommand support
+- `context.Context` support (via `cmdy.Context`, which is a `context.Context`)
+
+
 Usage
 -----
 
@@ -17,13 +25,13 @@ Subcommands are easy to create; you need a builder and a command:
 
 ```go
 func myCommandBuilder() (cmdy.Command, error) {
-    return &myCommand{}, nil
+	return &myCommand{}, nil
 }
 
 type myCommand struct {
-    testFlag string
-    testArg  string
-    rem      []string
+	testFlag string
+	testArg  string
+	rem      []string
 }
 
 var _ cmdy.Command = &myCommand{}
@@ -51,9 +59,9 @@ func (t *myCommand) Run(ctx cmdy.Context, in cmdy.Input) error {
 }
 
 func main() {
-    if err := run(); err != nil {
-        cmdy.Fatal(err)
-    }
+	if err := run(); err != nil {
+		cmdy.Fatal(err)
+	}
 }
 
 func run() error {
@@ -61,15 +69,15 @@ func run() error {
 		return cmdy.NewCommandSet(
 			"My command set",
 			cmdy.Builders{
-				"cmd":  myCommandBuilder,
-                "nest": func() (cmdy.Command, error) {
-                    return cmdy.NewCommandSet(
-                        "Nested command set",
-                        cmdy.Builders{
-                            "subcmd": myCommandBuilder,
-                        },
-                    )
-                },
+				"cmd": myCommandBuilder,
+				"nest": func() (cmdy.Command, error) {
+					return cmdy.NewCommandSet(
+						"Nested command set",
+						cmdy.Builders{
+							"subcmd": myCommandBuilder,
+						},
+					)
+				},
 			},
 		), nil
 	}
