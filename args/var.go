@@ -100,7 +100,12 @@ type remaining struct {
 
 func (r *remaining) Get() interface{}   { return r.arg.Get() }
 func (r *remaining) Set(s string) error { return r.arg.Set(s) }
-func (r *remaining) String() string     { return r.arg.String() }
+func (r *remaining) String() string {
+	if r.arg != nil {
+		return r.arg.String()
+	}
+	return ""
+}
 
 type StringList []string
 

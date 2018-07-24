@@ -3,6 +3,8 @@ package args
 import (
 	"fmt"
 	"time"
+
+	"github.com/shabbyrobe/cmdy/usage"
 )
 
 const Unlimited = -1
@@ -18,12 +20,17 @@ func Max(max int) Range         { return Range{0, max} }
 func MinMax(min, max int) Range { return Range{min, max} }
 
 type Arg struct {
-	Name     string
-	Usage    string
-	Value    ArgVal
-	Default  string
-	Optional bool
+	name     string
+	usage    string
+	value    ArgVal
+	defValue string
+	optional bool
 }
+
+func (a *Arg) Name() string       { return a.name }
+func (a *Arg) Usage() string      { return a.usage }
+func (a *Arg) DefValue() string   { return a.defValue }
+func (a *Arg) Value() interface{} { return a.value }
 
 type ArgVal interface {
 	Get() interface{}
@@ -35,10 +42,25 @@ type ArgSet struct {
 	args      []*Arg
 	optional  bool
 	remaining *remaining
+	hideUsage bool
 }
 
 func NewArgSet() *ArgSet {
 	return &ArgSet{}
+}
+
+func (a *ArgSet) HideUsage() { a.hideUsage = true }
+
+func (a *ArgSet) Usage() string {
+	if a.hideUsage {
+		return ""
+	}
+
+	usables := make([]usage.Usable, len(a.args))
+	for i, a := range a.args {
+		usables[i] = a
+	}
+	return usage.Usage(0, usables...)
 }
 
 // NArg returns the number of args that have been defined. A "remaining"
@@ -53,8 +75,11 @@ func (a *ArgSet) Parse(input []string) error {
 	var consumed int
 
 	for idx, arg := range a.args {
-		if a.remaining != nil && arg.Value == a.remaining {
-			left := input[idx:]
+		if a.remaining != nil && arg.value == a.remaining {
+			var left []string
+			if idx < inputLen {
+				left = input[idx:]
+			}
 			leftLen := len(left)
 			if leftLen < a.remaining.Min {
 				return fmt.Errorf("expected at least %d remaining args at position %d, found %d", a.remaining.Min, idx+1, leftLen)
@@ -72,11 +97,11 @@ func (a *ArgSet) Parse(input []string) error {
 
 		} else {
 			if idx >= inputLen {
-				if !arg.Optional {
+				if !arg.optional {
 					return fmt.Errorf("missing arg at index %d", idx+1)
 				}
 			} else {
-				if err := arg.Value.Set(input[idx]); err != nil {
+				if err := arg.value.Set(input[idx]); err != nil {
 					return err // FIXME
 				}
 			}
@@ -187,12 +212,9 @@ func (a *ArgSet) RemainingVar(val ArgVal, name string, minmax Range, usage strin
 
 func (a *ArgSet) Var(val ArgVal, name string, usage string) {
 	dflt := val.String()
-	if dflt != "" && !a.optional {
-		panic("default value not allowed before call to ArgSet.Optional()")
-	}
 
-	// FIXME: should be possible; only one remaining should be allowed but
-	// we can count backwards after this.
+	// FIXME: should be possible; only one 'remaining' should be allowed but
+	// we can count backwards from the end for the rest.
 	if a.remaining != nil {
 		panic("cannot add more arguments after accumulating remaining")
 	}

@@ -13,9 +13,9 @@ func TestNonOptionalArgAfterOptionalArg(t *testing.T) {
 	setup := func() (*ArgSet, *vals) {
 		var v vals
 		as := NewArgSet()
-		as.String(&v.foo, "<foo>", "Usage...")
-		as.StringOptional(&v.bar, "<bar>", "default", "Usage...")
-		as.String(&v.baz, "<baz>", "Usage...")
+		as.String(&v.foo, "foo", "Usage...")
+		as.StringOptional(&v.bar, "bar", "default", "Usage...")
+		as.String(&v.baz, "baz", "Usage...")
 		return as, &v
 	}
 
@@ -147,5 +147,43 @@ func TestRemainingInts(t *testing.T) {
 
 		err := as.Parse([]string{"1", "2", "quack"})
 		tt.MustAssert(err != nil) // FIXME: check error
+	})
+}
+
+func TestRemainingAfterOptional(t *testing.T) {
+	type vals struct {
+		foo string
+		rem []string
+	}
+	setup := func() (*ArgSet, *vals) {
+		var v vals
+		as := NewArgSet()
+		as.StringOptional(&v.foo, "foo", "default", "Usage...")
+		as.Remaining(&v.rem, "rem", AnyLen, "Usage...")
+		return as, &v
+	}
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		tt.MustOK(as.Parse([]string{"a", "b", "c"}))
+		tt.MustEqual("a", v.foo)
+		tt.MustEqual([]string{"b", "c"}, v.rem)
+	})
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		tt.MustOK(as.Parse([]string{"a"}))
+		tt.MustEqual("a", v.foo)
+		tt.MustEqual(0, len(v.rem))
+	})
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		tt.MustOK(as.Parse([]string{}))
+		tt.MustEqual("default", v.foo)
+		tt.MustEqual(0, len(v.rem))
 	})
 }
