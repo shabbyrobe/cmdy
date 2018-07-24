@@ -27,10 +27,31 @@ type Arg struct {
 	optional bool
 }
 
-func (a *Arg) Name() string       { return a.name }
-func (a *Arg) Usage() string      { return a.usage }
-func (a *Arg) DefValue() string   { return a.defValue }
-func (a *Arg) Value() interface{} { return a.value }
+func (a *Arg) Name() string     { return a.name }
+func (a *Arg) Usage() string    { return a.usage }
+func (a *Arg) DefValue() string { return a.defValue }
+
+func (a *Arg) Value() interface{} {
+	if rem, ok := a.value.(*remaining); ok {
+		return rem.arg
+	}
+	return a.value
+}
+
+func (a *Arg) Describe(kind string, hint string) string {
+	name := a.Name()
+	if _, ok := a.value.(*remaining); ok {
+		name += "..."
+	}
+
+	if kind != "" && hint != "" {
+		return fmt.Sprintf("<%s> (%s) %s", name, kind, hint)
+	} else if kind != "" {
+		return fmt.Sprintf("<%s> (%s)", name, kind)
+	} else {
+		return fmt.Sprintf("<%s>", name)
+	}
+}
 
 type ArgVal interface {
 	Get() interface{}

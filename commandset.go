@@ -40,9 +40,12 @@ func CommandSetAfter(fn func(Context, Input, error) error) CommandSetOption {
 }
 
 type CommandSet struct {
+	// All Builders in this map will be called in order to create the Usage
+	// string.
 	Builders Builders
-	Default  Builder
-	Unknown  Builder
+
+	Default Builder
+	Unknown Builder
 
 	Before      func(Context, Input) error
 	After       func(Context, Input, error) error
@@ -72,10 +75,10 @@ func NewCommandSet(synopsis string, builders Builders, opts ...CommandSetOption)
 
 func (cs *CommandSet) Synopsis() string { return cs.synopsis }
 
-func (c *CommandSet) Usage() string {
-	out := c.usage
+func (cs *CommandSet) Usage() string {
+	out := cs.usage
 	if out == "" {
-		out = c.synopsis
+		out = cs.synopsis
 	}
 	out = strings.TrimSpace(out)
 
@@ -84,9 +87,9 @@ func (c *CommandSet) Usage() string {
 	}
 
 	out += "Commands:\n"
-	names := make([]string, 0, len(c.Builders))
+	names := make([]string, 0, len(cs.Builders))
 	width := 6
-	for name := range c.Builders {
+	for name := range cs.Builders {
 		ln := len(name)
 		if ln > width {
 			width = ln
@@ -99,7 +102,7 @@ func (c *CommandSet) Usage() string {
 	indent := strings.Repeat(" ", width+4+2)
 
 	for _, l := range names {
-		s, err := c.Builders[l]()
+		s, err := cs.Builders[l]()
 		if err == nil {
 			syn := s.Synopsis()
 			syn = usage.Wrap(syn, indent, 0)

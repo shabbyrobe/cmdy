@@ -16,17 +16,15 @@ type Usable interface {
 	Usage() string
 	DefValue() string
 	Value() interface{}
+	Describe(kind string, hint string) string
 }
 
 func Usage(width int, usables ...Usable) string {
 	var out strings.Builder
 
 	for _, usable := range usables {
-		s := fmt.Sprintf("  -%s", usable.Name())
-		name, usage := unquoteUsage(usable)
-		if len(name) > 0 {
-			s += "=" + name
-		}
+		usage, kind, hint := unquoteUsage(usable)
+		s := "  " + usable.Describe(kind, hint)
 
 		// Boolean flags of one ASCII letter are so common we
 		// treat them specially, putting their usage on the same line.
@@ -74,7 +72,7 @@ func containsString(v reflect.Type) bool {
 	}
 }
 
-func unquoteUsage(usable Usable) (name string, usage string) {
+func unquoteUsage(usable Usable) (usage string, name string, hint string) {
 	// Look for a back-quoted name, but avoid the strings package.
 	usage = usable.Usage()
 	for i := 0; i < len(usage); i++ {
@@ -83,7 +81,7 @@ func unquoteUsage(usable Usable) (name string, usage string) {
 				if usage[j] == '`' {
 					name = usage[i+1 : j]
 					usage = usage[:i] + name + usage[j+1:]
-					return name, usage
+					return usage, name, hint
 				}
 			}
 			break // Only one back quote; use type name.
@@ -99,23 +97,33 @@ func unquoteUsage(usable Usable) (name string, usage string) {
 		vt = vt.Elem()
 	}
 
+	name, hint = elemType(vt)
+
+	return
+}
+
+func elemType(vt reflect.Type) (name, hint string) {
 	if containsDuration(vt) {
-		name = "<duration> (formats: '1h2s', '-3.4ms', units: h, m, s, ms, us, ns)"
+		name = "duration"
+		hint = "formats: '1h2s', '-3.4ms', units: h, m, s, ms, us, ns"
 	} else {
 		switch vt.Kind() {
 		case reflect.Bool:
 			name = ""
 		case reflect.Float32, reflect.Float64:
-			name = "<float>"
+			name = "float"
 		case reflect.String:
-			name = "<string>"
+			name = "string"
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			name = "<int>"
+			name = "int"
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			name = "<uint>"
+			name = "uint"
+		case reflect.Slice:
+			name, hint = elemType(vt.Elem())
+			// name += "[]"
 		}
 	}
-	return
+	return name, hint
 }
 
 // isZeroValue guesses whether the string represents the zero
