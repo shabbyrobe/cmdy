@@ -17,6 +17,8 @@ type Command interface {
 	Run(Context, Input) error
 }
 
+// Builder creates an instance of your Command. The instance should be a new
+// instance, not a recycled instance.
 type Builder func() (Command, error)
 
 type Input interface {
