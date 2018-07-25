@@ -11,30 +11,51 @@ import (
 
 type Builders map[string]Builder
 
-type CommandMatcher func(bldrs Builders, in string) (bld Builder, name string, rerr error)
+// Matcher allows you to specify a function for resolving a builder
+// from a list of builders when using a Group.
+//
+// See GroupMatcher, GroupPrefixMatcher and PrefixMatcher.
+//
+// WARNING: This API may change to return a list of possible options when the
+// choice is ambiguous.
+type Matcher func(bldrs Builders, in string) (bld Builder, name string, rerr error)
 
 type GroupOption func(cs *Group)
 
-func GroupDefault(b Builder) GroupOption {
-	return func(cs *Group) { cs.Default = b }
+func GroupDefault(b Builder) GroupOption { return func(cs *Group) { cs.Default = b } }
+
+func GroupUnknown(b Builder) GroupOption { return func(cs *Group) { cs.Unknown = b } }
+
+func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
+
+func GroupPrefixMatcher(minLen int) GroupOption {
+	return func(cs *Group) { cs.Matcher = PrefixMatcher(cs, minLen) }
 }
 
-func GroupUnknown(b Builder) GroupOption {
-	return func(cs *Group) { cs.Unknown = b }
-}
+// GroupUsage provides the usage template to the Group.
+// The result of this function may be cached.
+func GroupUsage(usage string) GroupOption { return func(cs *Group) { cs.usage = usage } }
 
-func GroupUsage(usage string) GroupOption {
-	return func(cs *Group) { cs.usage = usage }
-}
-
+// GroupFlags provides a function that creates a FlagSet to the Group.
+// This function may return nil. The result of this function may be cached.
 func GroupFlags(fb func() *FlagSet) GroupOption {
 	return func(cs *Group) { cs.FlagBuilder = fb }
 }
 
-func GroupBefore(fn func(Context) error) GroupOption {
-	return func(cs *Group) { cs.Before = fn }
+// GroupBefore provides a function to call Before a Group's subcommand is
+// executed.
+//
+// Any error returned by the before function will prevent the subcommand from
+// executing.
+func GroupBefore(before func(Context) error) GroupOption {
+	return func(cs *Group) { cs.Before = before }
 }
 
+// GroupAfter provides a function to call After a Group's subcommand is
+// executed.
+//
+// Any error returned by the subcommand is passed to the function. If it
+// is not returned, it will be swallowed.
 func GroupAfter(fn func(Context, error) error) GroupOption {
 	return func(cs *Group) { cs.After = fn }
 }
@@ -50,8 +71,8 @@ type Group struct {
 	Before      func(Context) error
 	After       func(Context, error) error
 	FlagBuilder func() *FlagSet
+	Matcher     Matcher
 
-	matcher  CommandMatcher
 	usage    string
 	synopsis string
 
@@ -132,9 +153,9 @@ func (cs *Group) Run(ctx Context) error {
 		bld  Builder
 		name string
 	)
-	if cs.matcher != nil {
+	if cs.Matcher != nil {
 		var err error
-		bld, name, err = cs.matcher(cs.Builders, cs.subcommand)
+		bld, name, err = cs.Matcher(cs.Builders, cs.subcommand)
 		if err != nil {
 			return err
 		}

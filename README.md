@@ -14,8 +14,9 @@ Features
 --------
 
 - `ArgSet`, similar to `flag.FlagSet` but for positional arguments
-- Simple subcommand support
-- `context.Context` support (via `cmdy.Context`, which is a `context.Context`)
+- Simple subcommand (and sub-sub command (and sub-sub-sub command)) support
+- `context.Context` support (via `cmdy.Context`, which is also a
+  `context.Context`)
 
 
 Usage
@@ -28,12 +29,6 @@ func myCommandBuilder() (cmdy.Command, error) {
 	return &myCommand{}, nil
 }
 
-const myCommandUsage = `
-{{Synopsis}}
-
-Usage: {{Invocation}}
-`
-
 type myCommand struct {
 	testFlag string
 	testArg  string
@@ -43,10 +38,6 @@ type myCommand struct {
 var _ cmdy.Command = &myCommand{}
 
 func (t *myCommand) Synopsis() string { return "My command is a command that does stuff" }
-
-// Usage is optional; it allows you to specify a Go template that will
-// return a full help message.
-func (t *myCommand) Usage() string { return myCommandUsage }
 
 func (t *myCommand) Flags() *cmdy.FlagSet {
 	fs := cmdy.NewFlagSet()
@@ -82,6 +73,7 @@ func run() error {
 					return cmdy.NewGroup(
 						"Nested group",
 						cmdy.Builders{
+                            // Not sure why you would, but you can reuse builders like this:
 							"subcmd": myCommandBuilder,
 						},
 					)
@@ -91,4 +83,19 @@ func run() error {
 	}
 	return cmdy.Run(context.Background(), os.Args[1:], bld)
 }
+```
+
+You can customise the help message by implementing the optional `cmdy.Usage`
+interface:
+
+```go
+const myCommandUsage = `
+{{Synopsis}}
+
+Usage: {{Invocation}}
+`
+
+var _ cmdy.Usage = &myCommand{}
+
+func (t *myCommand) Usage() string { return myCommandUsage }
 ```
