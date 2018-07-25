@@ -148,19 +148,19 @@ func (cs *Group) Args() *args.ArgSet {
 	return as
 }
 
-func (cs *Group) Run(ctx Context) error {
-	var (
-		bld  Builder
-		name string
-	)
+func (cs *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
 	if cs.Matcher != nil {
-		var err error
-		bld, name, err = cs.Matcher(cs.Builders, cs.subcommand)
-		if err != nil {
-			return err
-		}
+		bld, name, rerr = cs.Matcher(cs.Builders, cmd)
 	} else {
-		bld, name = cs.Builders[cs.subcommand], cs.subcommand
+		bld, name = cs.Builders[cmd], cmd
+	}
+	return bld, name, rerr
+}
+
+func (cs *Group) Run(ctx Context) error {
+	bld, name, err := cs.Builder(cs.subcommand)
+	if err != nil {
+		return err
 	}
 
 	if bld == nil {
@@ -177,7 +177,7 @@ func (cs *Group) Run(ctx Context) error {
 		}
 	}
 
-	err := ctx.Runner().Run(ctx, name, cs.subcommandArgs, bld)
+	err = ctx.Runner().Run(ctx, name, cs.subcommandArgs, bld)
 	if cs.After != nil {
 		err = cs.After(ctx, err)
 	}

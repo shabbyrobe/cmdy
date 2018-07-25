@@ -136,7 +136,7 @@ func (a *ArgSet) Parse(input []string) error {
 				}
 			} else {
 				if err := arg.value.Set(input[idx]); err != nil {
-					return err // FIXME
+					return fmt.Errorf("arg invalid at position %d: %v", idx+1, err)
 				}
 			}
 		}

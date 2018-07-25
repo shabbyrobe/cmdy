@@ -4,6 +4,9 @@ import (
 	"sort"
 )
 
+// PrefixMatcher returns a primitive Matcher for use with a command Group that
+// will match a command if the input is an unambiguous prefix of one of the
+// Group's Builders.
 func PrefixMatcher(group *Group, minLen int) Matcher {
 	if minLen <= 0 {
 		panic("minLen must be > 0")
@@ -23,6 +26,8 @@ func PrefixMatcher(group *Group, minLen int) Matcher {
 			var slen = len(str)
 			if ilen > slen {
 				continue
+			} else if str == in {
+				return group.Builders[str], str, nil
 			}
 
 			for i := 0; i < slen; i++ {
@@ -32,12 +37,8 @@ func PrefixMatcher(group *Group, minLen int) Matcher {
 				cur++
 			}
 
-			if cur+1 == slen { // exact match
-				return group.Builders[str], str, nil
-			}
-
-			if cur > 0 && cur > minLen {
-				if cur < max {
+			if cur > 0 && cur >= minLen {
+				if cur < max || cur < ilen {
 					return bld, name, nil
 				} else if cur == max {
 					return nil, "", nil
