@@ -28,6 +28,12 @@ func myCommandBuilder() (cmdy.Command, error) {
 	return &myCommand{}, nil
 }
 
+const myCommandUsage = `
+{{Synopsis}}
+
+Usage: {{Invocation}}
+`
+
 type myCommand struct {
 	testFlag string
 	testArg  string
@@ -37,7 +43,10 @@ type myCommand struct {
 var _ cmdy.Command = &myCommand{}
 
 func (t *myCommand) Synopsis() string { return "My command is a command that does stuff" }
-func (t *myCommand) Usage() string    { return "mycommand <args>" }
+
+// Usage is optional; it allows you to specify a Go template that will
+// return a full help message.
+func (t *myCommand) Usage() string { return myCommandUsage }
 
 func (t *myCommand) Flags() *cmdy.FlagSet {
 	fs := cmdy.NewFlagSet()
@@ -52,9 +61,8 @@ func (t *myCommand) Args() *args.ArgSet {
 	return as
 }
 
-func (t *myCommand) Run(ctx cmdy.Context, in cmdy.Input) error {
-	spew.Dump(in)
-	spew.Dump(t)
+func (t *myCommand) Run(ctx cmdy.Context) error {
+	fmt.Println(t.testFlag, t.testArg, t.rem)
 	return nil
 }
 
@@ -66,13 +74,13 @@ func main() {
 
 func run() error {
 	bld := func() (cmdy.Command, error) {
-		return cmdy.NewCommandSet(
-			"My command set",
+		return cmdy.NewGroup(
+			"My command group",
 			cmdy.Builders{
 				"cmd": myCommandBuilder,
 				"nest": func() (cmdy.Command, error) {
-					return cmdy.NewCommandSet(
-						"Nested command set",
+					return cmdy.NewGroup(
+						"Nested group",
 						cmdy.Builders{
 							"subcmd": myCommandBuilder,
 						},

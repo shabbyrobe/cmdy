@@ -92,17 +92,20 @@ func unquoteUsage(usable Usable) (usage string, name string, hint string) {
 	// The reflection on internal type names is unfortunate, but it was the easiest
 	// way to duplicate the stdlib's functionality:
 	name = "value"
-	vt := reflect.TypeOf(usable.Value())
-	for vt.Kind() == reflect.Ptr {
-		vt = vt.Elem()
-	}
-
-	name, hint = elemType(vt)
+	name, hint = Kind(usable)
 
 	return
 }
 
-func elemType(vt reflect.Type) (name, hint string) {
+func Kind(usable Usable) (name, hint string) {
+	vt := reflect.TypeOf(usable.Value())
+	for vt.Kind() == reflect.Ptr {
+		vt = vt.Elem()
+	}
+	return kind(vt)
+}
+
+func kind(vt reflect.Type) (name, hint string) {
 	if containsDuration(vt) {
 		name = "duration"
 		hint = "formats: '1h2s', '-3.4ms', units: h, m, s, ms, us, ns"
@@ -119,7 +122,7 @@ func elemType(vt reflect.Type) (name, hint string) {
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			name = "uint"
 		case reflect.Slice:
-			name, hint = elemType(vt.Elem())
+			name, hint = kind(vt.Elem())
 			// name += "[]"
 		}
 	}

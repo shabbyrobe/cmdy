@@ -11,35 +11,35 @@ import (
 
 type Builders map[string]Builder
 
-type CommandMatcher func(bldrs Builders, in string) (Builder, error)
+type CommandMatcher func(bldrs Builders, in string) (bld Builder, name string, rerr error)
 
-type CommandSetOption func(cs *CommandSet)
+type GroupOption func(cs *Group)
 
-func CommandSetDefault(b Builder) CommandSetOption {
-	return func(cs *CommandSet) { cs.Default = b }
+func GroupDefault(b Builder) GroupOption {
+	return func(cs *Group) { cs.Default = b }
 }
 
-func CommandSetUnknown(b Builder) CommandSetOption {
-	return func(cs *CommandSet) { cs.Unknown = b }
+func GroupUnknown(b Builder) GroupOption {
+	return func(cs *Group) { cs.Unknown = b }
 }
 
-func CommandSetUsage(usage string) CommandSetOption {
-	return func(cs *CommandSet) { cs.usage = usage }
+func GroupUsage(usage string) GroupOption {
+	return func(cs *Group) { cs.usage = usage }
 }
 
-func CommandSetFlags(fb func() *FlagSet) CommandSetOption {
-	return func(cs *CommandSet) { cs.FlagBuilder = fb }
+func GroupFlags(fb func() *FlagSet) GroupOption {
+	return func(cs *Group) { cs.FlagBuilder = fb }
 }
 
-func CommandSetBefore(fn func(Context, Input) error) CommandSetOption {
-	return func(cs *CommandSet) { cs.Before = fn }
+func GroupBefore(fn func(Context) error) GroupOption {
+	return func(cs *Group) { cs.Before = fn }
 }
 
-func CommandSetAfter(fn func(Context, Input, error) error) CommandSetOption {
-	return func(cs *CommandSet) { cs.After = fn }
+func GroupAfter(fn func(Context, error) error) GroupOption {
+	return func(cs *Group) { cs.After = fn }
 }
 
-type CommandSet struct {
+type Group struct {
 	// All Builders in this map will be called in order to create the Usage
 	// string.
 	Builders Builders
@@ -47,8 +47,8 @@ type CommandSet struct {
 	Default Builder
 	Unknown Builder
 
-	Before      func(Context, Input) error
-	After       func(Context, Input, error) error
+	Before      func(Context) error
+	After       func(Context, error) error
 	FlagBuilder func() *FlagSet
 
 	matcher  CommandMatcher
@@ -60,10 +60,10 @@ type CommandSet struct {
 	subcommandArgs []string
 }
 
-var _ Command = &CommandSet{}
+var _ Command = &Group{}
 
-func NewCommandSet(synopsis string, builders Builders, opts ...CommandSetOption) *CommandSet {
-	cs := &CommandSet{
+func NewGroup(synopsis string, builders Builders, opts ...GroupOption) *Group {
+	cs := &Group{
 		synopsis: synopsis,
 		Builders: builders,
 	}
@@ -73,12 +73,12 @@ func NewCommandSet(synopsis string, builders Builders, opts ...CommandSetOption)
 	return cs
 }
 
-func (cs *CommandSet) Synopsis() string { return cs.synopsis }
+func (cs *Group) Synopsis() string { return cs.synopsis }
 
-func (cs *CommandSet) Usage() string {
+func (cs *Group) Usage() string {
 	out := cs.usage
 	if out == "" {
-		out = cs.synopsis
+		out = defaultUsage
 	}
 	out = strings.TrimSpace(out)
 
@@ -112,14 +112,14 @@ func (cs *CommandSet) Usage() string {
 	return out
 }
 
-func (cs *CommandSet) Flags() *FlagSet {
+func (cs *Group) Flags() *FlagSet {
 	if cs.FlagBuilder != nil {
 		return cs.FlagBuilder()
 	}
 	return nil
 }
 
-func (cs *CommandSet) Args() *args.ArgSet {
+func (cs *Group) Args() *args.ArgSet {
 	as := args.NewArgSet()
 	as.HideUsage()
 	as.StringOptional(&cs.subcommand, "cmd", "", "Subcommand name")
@@ -127,16 +127,19 @@ func (cs *CommandSet) Args() *args.ArgSet {
 	return as
 }
 
-func (cs *CommandSet) Run(ctx Context, in Input) error {
-	var bld Builder
+func (cs *Group) Run(ctx Context) error {
+	var (
+		bld  Builder
+		name string
+	)
 	if cs.matcher != nil {
 		var err error
-		bld, err = cs.matcher(cs.Builders, cs.subcommand)
+		bld, name, err = cs.matcher(cs.Builders, cs.subcommand)
 		if err != nil {
 			return err
 		}
 	} else {
-		bld = cs.Builders[cs.subcommand]
+		bld, name = cs.Builders[cs.subcommand], cs.subcommand
 	}
 
 	if bld == nil {
@@ -148,14 +151,14 @@ func (cs *CommandSet) Run(ctx Context, in Input) error {
 	}
 
 	if cs.Before != nil {
-		if err := cs.Before(ctx, in); err != nil {
+		if err := cs.Before(ctx); err != nil {
 			return err
 		}
 	}
 
-	err := Run(ctx, cs.subcommandArgs, bld)
+	err := ctx.Runner().Run(ctx, name, cs.subcommandArgs, bld)
 	if cs.After != nil {
-		err = cs.After(ctx, in, err)
+		err = cs.After(ctx, err)
 	}
 
 	return err

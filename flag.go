@@ -1,7 +1,6 @@
 package cmdy
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 
@@ -11,7 +10,6 @@ import (
 type FlagSet struct {
 	*flag.FlagSet
 	WrapWidth int
-	buf       bytes.Buffer
 	hideUsage bool
 }
 
@@ -19,11 +17,35 @@ func NewFlagSet() *FlagSet {
 	fs := &FlagSet{
 		FlagSet: flag.NewFlagSet("", flag.ContinueOnError),
 	}
-	fs.FlagSet.SetOutput(&fs.buf)
+	fs.FlagSet.SetOutput(&devNull{})
 	return fs
 }
 
 func (fs *FlagSet) HideUsage() { fs.hideUsage = true }
+
+func (fs *FlagSet) Invocation() string {
+	var options string
+	var i int
+
+	fs.VisitAll(func(f *flag.Flag) {
+		if i >= 3 {
+			options = ""
+		} else {
+			if i > 0 {
+				options += " "
+			}
+			usable := usableFlag{f}
+			kind, _ := usage.Kind(usable)
+			options += "[" + usable.Describe(kind, "") + "]"
+		}
+		i++
+	})
+
+	if options == "" {
+		options = "[options]"
+	}
+	return options
+}
 
 func (fs *FlagSet) Usage() string {
 	if fs.hideUsage {
@@ -55,4 +77,10 @@ func (u usableFlag) Describe(kind string, hint string) string {
 	} else {
 		return fmt.Sprintf("-%s", name)
 	}
+}
+
+type devNull struct{}
+
+func (devNull) Write(p []byte) (int, error) {
+	return len(p), nil
 }

@@ -1,6 +1,10 @@
 package cmdy
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/shabbyrobe/cmdy/args"
+)
 
 const (
 	ExitDefault  = 2
@@ -32,28 +36,28 @@ func (u *usageError) Code() int     { return ExitUsage }
 func (u *usageError) Error() string { return u.err.Error() }
 func (u *usageError) Cause() error  { return u.err }
 
-func (u *usageError) populate(cmd Command) {
+func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *args.ArgSet) {
 	if u.populated {
 		return
 	}
 	u.populated = true
 
-	out := strings.TrimSpace(cmd.Usage()) + "\n"
+	out := strings.TrimSpace(usage) + "\n"
 
-	if fset := cmd.Flags(); fset != nil {
+	if flagSet != nil {
 		if out != "" {
 			out += "\n"
 		}
-		fu := fset.Usage()
+		fu := flagSet.Usage()
 		if fu != "" {
 			out += "Flags:\n" + fu
 		}
 	}
-	if aset := cmd.Args(); aset != nil {
+	if argSet != nil {
 		if out != "" {
 			out += "\n"
 		}
-		au := aset.Usage()
+		au := argSet.Usage()
 		if au != "" {
 			out += "Arguments:\n" + au + "\n"
 		}

@@ -9,17 +9,17 @@ import (
 	"github.com/shabbyrobe/golib/assert"
 )
 
-func TestCommandSet(t *testing.T) {
+func TestGroup(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var foo, bar = errors.New("foo"), errors.New("bar")
 
 	bldr := func() (Command, error) {
-		return NewCommandSet("set", Builders{
-			"foo": testCmdRunBuilder(func(c Context, i Input) error {
+		return NewGroup("set", Builders{
+			"foo": testCmdRunBuilder(func(c Context) error {
 				return foo
 			}),
-			"bar": testCmdRunBuilder(func(c Context, i Input) error {
+			"bar": testCmdRunBuilder(func(c Context) error {
 				return bar
 			}),
 		}), nil
@@ -29,12 +29,12 @@ func TestCommandSet(t *testing.T) {
 	tt.MustEqual(bar, Run(context.Background(), []string{"bar"}, bldr))
 }
 
-func TestCommandSet_SubcommandArgs(t *testing.T) {
+func TestGroup_SubcommandArgs(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
 	bldr := func() (Command, error) {
-		return NewCommandSet("set", Builders{
+		return NewGroup("set", Builders{
 			"foo": func() (Command, error) {
 				p = ""
 				as := args.NewArgSet()
@@ -54,12 +54,12 @@ func TestCommandSet_SubcommandArgs(t *testing.T) {
 	tt.MustAssert(err != nil) // FIXME: check error
 }
 
-func TestCommandSet_SubcommandFlags(t *testing.T) {
+func TestGroup_SubcommandFlags(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
 	bldr := func() (Command, error) {
-		return NewCommandSet("set", Builders{
+		return NewGroup("set", Builders{
 			"foo": func() (Command, error) {
 				fs := NewFlagSet()
 				fs.StringVar(&p, "pants", "", "Usage...")

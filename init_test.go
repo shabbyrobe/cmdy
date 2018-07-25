@@ -7,10 +7,10 @@ type testCmd struct {
 	usage    string
 	flags    *FlagSet
 	args     *args.ArgSet
-	run      func(c Context, i Input) error
+	run      func(c Context) error
 }
 
-func testCmdRunBuilder(r func(c Context, i Input) error) func() (Command, error) {
+func testCmdRunBuilder(r func(c Context) error) func() (Command, error) {
 	return func() (Command, error) { return &testCmd{run: r}, nil }
 }
 
@@ -23,9 +23,9 @@ func (t *testCmd) Usage() string      { return t.usage }
 func (t *testCmd) Flags() *FlagSet    { return t.flags }
 func (t *testCmd) Args() *args.ArgSet { return t.args }
 
-func (t *testCmd) Run(c Context, i Input) error {
+func (t *testCmd) Run(c Context) error {
 	if t.run != nil {
-		return t.run(c, i)
+		return t.run(c)
 	}
 	return nil
 }

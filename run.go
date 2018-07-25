@@ -1,35 +1,85 @@
 package cmdy
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"text/template"
+
+	"github.com/shabbyrobe/cmdy/args"
 )
 
 var (
-	stderr io.Writer = os.Stderr // Substitutable for testing
+	defaultRunner *Runner
 )
 
-func Run(ctx context.Context, args []string, b Builder) (rerr error) {
+func DefaultRunner() *Runner {
+	if defaultRunner == nil {
+		defaultRunner = NewStandardRunner()
+	}
+	return defaultRunner
+}
+
+type Runner struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
+func NewStandardRunner() *Runner {
+	return &Runner{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+}
+
+func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
 	cmd, err := b()
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		if uerr, ok := rerr.(*usageError); ok {
-			uerr.populate(cmd)
-		}
-	}()
 
 	var (
 		flagSet = cmd.Flags()
 		argSet  = cmd.Args()
 		remArgs = args
 	)
+
+	cctx, ok := ctx.(*commandContext)
+	if !ok {
+		cctx = &commandContext{
+			Context: ctx,
+			cmd:     cmd,
+			rawArgs: args,
+			runner:  r,
+		}
+	}
+
+	cctx.Push(name, cmd)
+	defer cctx.Pop()
+
+	defer func() {
+		if uerr, ok := rerr.(*usageError); ok {
+			path := CommandPath(cctx)
+
+			usageTpl, err := r.usageTpl(cmd, path, flagSet, argSet)
+			if err != nil {
+				panic(err)
+			}
+
+			var buf bytes.Buffer
+			if err := usageTpl.Execute(&buf, nil); err != nil {
+				panic(err)
+			}
+
+			uerr.populate(buf.String(), flagSet, argSet)
+		}
+	}()
 
 	if flagSet != nil {
 		if err := flagSet.Parse(args); err != nil {
@@ -51,17 +101,71 @@ func Run(ctx context.Context, args []string, b Builder) (rerr error) {
 		return fmt.Errorf("expected 0 arguments, found %d", len(remArgs))
 	}
 
-	cctx := &commandContext{ctx}
-	input := &input{cmd: cmd, rawArgs: args}
-	return cmd.Run(cctx, input)
+	return cmd.Run(cctx)
+}
+
+func (r *Runner) Fatal(err error) {
+	msg, code := FormatError(err)
+	if msg != "" {
+		fmt.Fprintln(r.Stderr, msg)
+	}
+	os.Exit(code)
+}
+
+func (r *Runner) usageTpl(cmd Command, path []string, flagSet *FlagSet, argSet *args.ArgSet) (tpl *template.Template, rerr error) {
+	// Update the documentation for the Usage interface if you add new functions
+	// to this map:
+	fns := template.FuncMap{
+		"Synopsis": func() string {
+			return cmd.Synopsis()
+		},
+		"Invocation": func() string {
+			out := strings.Join(path, " ")
+			if flagSet != nil {
+				out += " "
+				out += flagSet.Invocation()
+			}
+			if argSet != nil {
+				out += " "
+				out += argSet.Invocation()
+			}
+			return out
+		},
+		"CommandFull": func() string {
+			return strings.Join(path, " ")
+		},
+		"Command": func() string {
+			if len(path) > 0 {
+				return path[len(path)-1]
+			}
+			return ""
+		},
+	}
+	tpl = template.New("usage").Funcs(fns)
+
+	var usageRaw string
+	if ucmd, ok := cmd.(Usage); ok {
+		usageRaw = ucmd.Usage()
+	}
+	if usageRaw == "" {
+		usageRaw = defaultUsage
+	}
+
+	var err error
+	tpl, err = tpl.Parse(usageRaw)
+	if err != nil {
+		return nil, err
+	}
+	return tpl, nil
+}
+
+func Run(ctx context.Context, args []string, b Builder) (rerr error) {
+	name := ProgName()
+	return DefaultRunner().Run(ctx, name, args, b)
 }
 
 func Fatal(err error) {
-	msg, code := FormatError(err)
-	if msg != "" {
-		fmt.Fprintln(stderr, msg)
-	}
-	os.Exit(code)
+	DefaultRunner().Fatal(err)
 }
 
 func FormatError(err error) (msg string, code int) {
@@ -101,3 +205,38 @@ func FormatError(err error) (msg string, code int) {
 
 	return
 }
+
+func ProgName() string {
+	if len(os.Args) < 1 {
+		return ""
+	}
+	return baseName(os.Args[0])
+}
+
+// baseName is a cut-down remix of filepath.Base that saves us a dependency
+// and skips use-cases that we don't need to worry about, like windows volume
+// names, etc, because we are only using it to grab the program name.
+func baseName(path string) string {
+	// Strip trailing slashes.
+	for len(path) > 0 && os.IsPathSeparator(path[len(path)-1]) {
+		path = path[0 : len(path)-1]
+	}
+	// Find the last element
+	i := len(path) - 1
+	for i >= 0 && !os.IsPathSeparator(path[i]) {
+		i--
+	}
+	if i >= 0 {
+		path = path[i+1:]
+	}
+	return path
+}
+
+const defaultUsage = `
+{{if Synopsis -}}
+{{Synopsis}}
+
+{{end -}}
+
+Usage: {{Invocation}}
+`

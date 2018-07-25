@@ -84,6 +84,19 @@ func (a *ArgSet) Usage() string {
 	return usage.Usage(0, usables...)
 }
 
+func (a *ArgSet) Invocation() string {
+	var inv string
+
+	for idx, arg := range a.args {
+		if idx > 0 {
+			inv += " "
+		}
+		inv += arg.Describe("", "")
+	}
+
+	return inv
+}
+
 // NArg returns the number of args that have been defined. A "remaining"
 // arg counts as one arg.
 func (a *ArgSet) NArg() int {
