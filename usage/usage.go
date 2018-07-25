@@ -173,14 +173,31 @@ func Wrap(str string, indent string, width int) string {
 				out += "\n" + indent
 			}
 
-			var i, j int
-			var breaking bool
-			for j = range line {
+			var (
+				i, j     int
+				c        rune
+				breaking bool
+				inEsc    bool
+			)
+
+			for j, c = range line {
 				if i == width {
 					breaking = true
 					break
 				}
-				i++
+
+				// Don't count ASCII escape sequences towards line width:
+				if inEsc {
+					if c == 'm' {
+						inEsc = false
+					}
+				} else {
+					if c == '\033' {
+						inEsc = true
+					} else {
+						i++
+					}
+				}
 			}
 
 			cur := line[:j]
