@@ -20,7 +20,8 @@ type Context interface {
 	Stderr() io.Writer
 
 	Runner() *Runner
-	Parents() []CommandRef
+	Stack() []CommandRef
+	Current() CommandRef
 	Push(name string, cmd Command)
 	Pop() (name string, cmd Command)
 }
@@ -38,14 +39,14 @@ func (c *commandContext) Stdin() io.Reader  { return c.runner.Stdin }
 func (c *commandContext) Stdout() io.Writer { return c.runner.Stdout }
 func (c *commandContext) Stderr() io.Writer { return c.runner.Stderr }
 
-func (c *commandContext) Runner() *Runner       { return c.runner }
-func (c *commandContext) Parents() []CommandRef { return c.parents }
+func (c *commandContext) Runner() *Runner     { return c.runner }
+func (c *commandContext) Stack() []CommandRef { return c.parents }
 
-func (c *commandContext) Parent() Command {
+func (c *commandContext) Current() (ref CommandRef) {
 	if len(c.parents) > 0 {
-		return c.parents[len(c.parents)-1].Command
+		ref = c.parents[len(c.parents)-1]
 	}
-	return nil
+	return ref
 }
 
 func (c *commandContext) Push(name string, cmd Command) {
@@ -66,7 +67,7 @@ type CommandRef struct {
 }
 
 func CommandPath(ctx Context) (out []string) {
-	parents := ctx.Parents()
+	parents := ctx.Stack()
 	out = make([]string, 0, len(parents))
 	for i := 0; i < len(parents); i++ {
 		out = append(out, parents[i].Name)
