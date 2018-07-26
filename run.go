@@ -107,7 +107,12 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 func (r *Runner) Fatal(err error) {
 	msg, code := FormatError(err)
 	if msg != "" {
-		fmt.Fprintln(r.Stderr, msg)
+		if _, err := io.WriteString(r.Stderr, msg); err != nil {
+			panic(err)
+		}
+		if _, err := r.Stderr.Write([]byte{'\n'}); err != nil {
+			panic(err)
+		}
 	}
 	os.Exit(code)
 }
