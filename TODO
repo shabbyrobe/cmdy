@@ -1,6 +1,10 @@
-- Parent context should dictate binary name in usage
-- Parent values structs
-- Above the fold/below the fold help message
+Definitely:
 - Bash completion
-- Automatic usage string
+- Hidden flags (separate hide functionality for invocation and usage)
+- Configurable invocation overflow (when '--flag=<v>' becomes '[options]')
+
+Wishlist:
+- Above the fold/below the fold help message
 - Enumerate flags, when invalid flag detected for child command but detected in parent, offer help.
+- Wrappable invocation
+
