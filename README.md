@@ -1,22 +1,24 @@
 cmdy: Go library for implementing CLI programs
 ==============================================
 
-Combines the features I like from the `flag` stdlib package with the features
-I like from https://github.com/google/subcommands.
+[![GoDoc](https://godoc.org/github.com/shabbyrobe/cmdy?status.svg)](https://godoc.org/github.com/shabbyrobe/cmdy)
 
-This is a very early pass of basic functionality, it is not even remotely close
-to what I'm aiming for, but it's a start.
+`cmdy` combines the features I like from the `flag` stdlib package with the
+features I like from https://github.com/google/subcommands.
 
-Please don't use this yet.
+`cmdy` focuses on minimalism and tries to imitate and leverage the stdlib as
+much as possible. It does not attempt to replace `flag.Flag`, though it does
+extend it slightly.
 
 
 Features
 --------
 
-- `ArgSet`, similar to `flag.FlagSet` but for positional arguments
-- Simple subcommand (and sub-sub command (and sub-sub-sub command)) support
+- `ArgSet`, similar to `flag.FlagSet` but for positional arguments.
+- Simple subcommand (and sub-sub command (and sub-sub-sub command)) support.
 - `context.Context` support (via `cmdy.Context`, which is also a
-  `context.Context`)
+  `context.Context`).
+- Automatic (but customisable) usage and invocation strings.
 
 
 Usage
