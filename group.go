@@ -22,8 +22,6 @@ type Matcher func(bldrs Builders, in string) (bld Builder, name string, rerr err
 
 type GroupOption func(cs *Group)
 
-func GroupDefault(b Builder) GroupOption { return func(cs *Group) { cs.Default = b } }
-
 func GroupUnknown(b Builder) GroupOption { return func(cs *Group) { cs.Unknown = b } }
 
 func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
@@ -65,7 +63,6 @@ type Group struct {
 	// string.
 	Builders Builders
 
-	Default Builder
 	Unknown Builder
 
 	Before      func(Context) error
