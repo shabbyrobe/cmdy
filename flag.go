@@ -7,6 +7,8 @@ import (
 	"github.com/shabbyrobe/cmdy/usage"
 )
 
+const flagInvocationSpill = 3
+
 type FlagSet struct {
 	*flag.FlagSet
 	WrapWidth int
@@ -21,14 +23,17 @@ func NewFlagSet() *FlagSet {
 	return fs
 }
 
+// HideUsage prevents the "Flags" section from appearing in the Usage string.
 func (fs *FlagSet) HideUsage() { fs.hideUsage = true }
 
+// Invocation string for the flags, for example '[-foo=<yep>] [-bar=<pants>]`.
+// If there are too many flags, `[options]` is returned instead.
 func (fs *FlagSet) Invocation() string {
 	var options string
 	var i int
 
 	fs.VisitAll(func(f *flag.Flag) {
-		if i >= 3 {
+		if i >= flagInvocationSpill {
 			options = ""
 		} else {
 			if i > 0 {
@@ -47,6 +52,8 @@ func (fs *FlagSet) Invocation() string {
 	return options
 }
 
+// Usage returns the full usage string for the FlagSet, provided HideUsage()
+// has not been set.
 func (fs *FlagSet) Usage() string {
 	if fs.hideUsage {
 		return ""

@@ -17,6 +17,7 @@ var (
 	defaultRunner *Runner
 )
 
+// DefaultRunner is the global runner used by Run() and Fatal().
 func DefaultRunner() *Runner {
 	if defaultRunner == nil {
 		defaultRunner = NewStandardRunner()
@@ -30,6 +31,8 @@ type Runner struct {
 	Stderr io.Writer
 }
 
+// NewStandardRunner returns a Runner configured to use os.Stdin, os.Stdout and
+// os.Stderr.
 func NewStandardRunner() *Runner {
 	return &Runner{
 		Stdin:  os.Stdin,

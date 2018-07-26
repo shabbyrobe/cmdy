@@ -22,6 +22,8 @@ type Matcher func(bldrs Builders, in string) (bld Builder, name string, rerr err
 
 type GroupOption func(cs *Group)
 
+// GroupUnknown provides a Builder to use when the first argument to the Group is
+// either missing or unknown.
 func GroupUnknown(b Builder) GroupOption { return func(cs *Group) { cs.Unknown = b } }
 
 func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
@@ -78,10 +80,14 @@ func GroupHide(names ...string) GroupOption {
 // single Builder from a list of Builders based on the value of the first
 // non-flag argument.
 type Group struct {
+	// Builders contains mappings between command names (received as the first
+	// argument to this command) and the builder to delegate to.
+	//
 	// All Builders in this map will be called in order to create the Usage
 	// string.
 	Builders Builders
 
+	// Handles unknown command invocation. See the GroupUnknown() option for details.
 	Unknown Builder
 
 	Before      func(Context) error

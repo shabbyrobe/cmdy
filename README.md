@@ -67,19 +67,20 @@ func main() {
 
 func run() error {
 	bld := func() (cmdy.Command, error) {
+		nestedGroupBuilder := func() (cmdy.Command, error) {
+			return cmdy.NewGroup(
+				"Nested group",
+				cmdy.Builders{
+					"subcmd": myCommandBuilder,
+				},
+			)
+		}
+
 		return cmdy.NewGroup(
 			"My command group",
 			cmdy.Builders{
 				"cmd": myCommandBuilder,
-				"nest": func() (cmdy.Command, error) {
-					return cmdy.NewGroup(
-						"Nested group",
-						cmdy.Builders{
-                            // Not sure why you would, but you can reuse builders like this:
-							"subcmd": myCommandBuilder,
-						},
-					)
-				},
+				"nest": nestedGroupBuilder,
 			},
 		), nil
 	}
