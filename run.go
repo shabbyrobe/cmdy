@@ -87,10 +87,14 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 
 	if err := flagSet.Parse(args); err != nil {
 		if err == flag.ErrHelp {
-			return NewUsageError(nil) // suppress "flag: help requested"
-		} else {
-			return err
+			err = nil // suppress "flag: help requested"
 		}
+
+		// As at Go 1.11, the only error returned by the flag package that we
+		// might not consider a usage error is the one where you define your
+		// flag with a '-' in the name, but there's no way to identify it that
+		// doesn't involve string matching.
+		return NewUsageError(err)
 	}
 	remArgs = flagSet.Args()
 
@@ -100,7 +104,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		}
 
 	} else if len(remArgs) > 0 {
-		return fmt.Errorf("expected 0 arguments, found %d", len(remArgs))
+		return NewUsageError(fmt.Errorf("expected 0 arguments, found %d", len(remArgs)))
 	}
 
 	return cmd.Run(cctx)
@@ -182,6 +186,8 @@ func FormatError(err error) (msg string, code int) {
 
 	switch err := err.(type) {
 	case *usageError:
+		// usageError.usage is lazily populated from a Go text/template in
+		// Runner.Run() before it is returned:
 		msg = strings.TrimSpace(err.usage)
 		code = err.Code()
 

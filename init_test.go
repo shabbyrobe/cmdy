@@ -1,6 +1,10 @@
 package cmdy
 
-import "github.com/shabbyrobe/cmdy/args"
+import (
+	"bytes"
+
+	"github.com/shabbyrobe/cmdy/args"
+)
 
 type testCmd struct {
 	synopsis string
@@ -28,4 +32,21 @@ func (t *testCmd) Run(c Context) error {
 		return t.run(c)
 	}
 	return nil
+}
+
+type testRunner struct {
+	stdin  bytes.Buffer
+	stdout bytes.Buffer
+	stderr bytes.Buffer
+	*Runner
+}
+
+func newTestRunner() *testRunner {
+	tr := &testRunner{}
+	tr.Runner = &Runner{
+		Stdin:  &tr.stdin,
+		Stdout: &tr.stdout,
+		Stderr: &tr.stderr,
+	}
+	return tr
 }
