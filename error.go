@@ -6,8 +6,19 @@ import (
 	"github.com/shabbyrobe/cmdy/args"
 )
 
+// FIXME: these are Unix codes, but other operating systems use
+// different codes.
+//
+// On macOS/Linux, it looks like Go uses status code 2 for a panic,
+// so it's probably a good idea to avoid that. Discussion will be
+// on one or both of these threads:
+//
+// https://groups.google.com/forum/#!msg/golang-nuts/u9NgKibJsKI/XxCdDihFDAAJ
+// https://github.com/golang/go/issues/24284
+//
 const (
-	ExitDefault  = 2
+	ExitSuccess  = 0
+	ExitFailure  = 1
 	ExitUsage    = 127
 	ExitInternal = 255
 )
@@ -22,9 +33,19 @@ type exitError struct {
 	err  error
 }
 
-func (e exitError) Code() int     { return e.code }
-func (e exitError) Error() string { return e.err.Error() }
-func (e exitError) Cause() error  { return e.err }
+// ErrWithCode allows you to wrap an error in a status code which will be used
+// by cli.Fatal() as the exit code.
+func ErrWithCode(code int, err error) error {
+	if ee, ok := err.(*exitError); ok {
+		ee.code = code
+		return ee
+	}
+	return &exitError{err: err, code: code}
+}
+
+func (e *exitError) Code() int     { return e.code }
+func (e *exitError) Error() string { return e.err.Error() }
+func (e *exitError) Cause() error  { return e.err }
 
 type usageError struct {
 	err       error

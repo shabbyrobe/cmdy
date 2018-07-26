@@ -177,14 +177,14 @@ func Fatal(err error) {
 
 func FormatError(err error) (msg string, code int) {
 	if err == nil {
-		return "", 0
+		return "", ExitSuccess
 	}
-
-	code = ExitDefault
 
 	switch err := err.(type) {
 	case *usageError:
 		msg = strings.TrimSpace(err.usage)
+		code = err.Code()
+
 		if err.err != nil {
 			if msg != "" {
 				msg += "\n\n"
@@ -210,7 +210,7 @@ func FormatError(err error) (msg string, code int) {
 	}
 
 	if code == 0 {
-		code = ExitDefault
+		code = ExitFailure
 	}
 
 	return
