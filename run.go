@@ -81,16 +81,18 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		}
 	}()
 
-	if flagSet != nil {
-		if err := flagSet.Parse(args); err != nil {
-			if err == flag.ErrHelp {
-				return NewUsageError(err)
-			} else {
-				return err
-			}
-		}
-		remArgs = flagSet.Args()
+	if flagSet == nil {
+		flagSet = NewFlagSet() // handles --help by default, save ourselves the trouble
 	}
+
+	if err := flagSet.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return NewUsageError(nil) // suppress "flag: help requested"
+		} else {
+			return err
+		}
+	}
+	remArgs = flagSet.Args()
 
 	if argSet != nil {
 		if err := argSet.Parse(remArgs); err != nil {
@@ -189,8 +191,10 @@ func FormatError(err error) (msg string, code int) {
 			}
 			msg += "error: " + err.err.Error()
 		}
+
 	case Error:
 		msg, code = err.Error(), err.Code()
+
 	case errorGroup:
 		errs := err.Errors()
 		last := len(errs) - 1
@@ -200,6 +204,7 @@ func FormatError(err error) (msg string, code int) {
 				msg += "\n"
 			}
 		}
+
 	default:
 		msg = err.Error()
 	}
