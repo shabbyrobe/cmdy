@@ -3,6 +3,7 @@ package cmdy
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/args"
@@ -73,4 +74,41 @@ func TestGroup_SubcommandFlags(t *testing.T) {
 
 	err := Run(context.Background(), []string{"foo", "-pants"}, bldr)
 	tt.MustAssert(err != nil) // FIXME: check error
+}
+
+func TestGroup_Unknown(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	var foo = errors.New("foo")
+
+	bldr := func() (Command, error) {
+		return NewGroup("set", Builders{},
+			GroupUnknown(func() (Command, error) {
+				return nil, foo
+			}),
+		), nil
+	}
+
+	tt.MustEqual(foo, Run(context.Background(), []string{"foo"}, bldr))
+}
+
+func TestGroup_Hide(t *testing.T) {
+	tt := assert.WrapTB(t)
+	_ = tt
+
+	grp := NewGroup("set",
+		Builders{
+			"4GKwDcbp": func() (Command, error) { return &testCmd{synopsis: "4GKwDcbp"}, nil },
+			"9rdjKX3j": func() (Command, error) { return &testCmd{synopsis: "9rdjKX3j"}, nil },
+			"GM68tb0F": func() (Command, error) { return &testCmd{synopsis: "GM68tb0F"}, nil },
+			"OZJpKePU": func() (Command, error) { return &testCmd{synopsis: "OZJpKePU"}, nil },
+		},
+		GroupHide("9rdjKX3j", "OZJpKePU"),
+	)
+
+	out := grp.Usage()
+	tt.MustAssert(!strings.Contains(out, "OZJpKePU"))
+	tt.MustAssert(!strings.Contains(out, "9rdjKX3j"))
+	tt.MustAssert(strings.Contains(out, "GM68tb0F"))
+	tt.MustAssert(strings.Contains(out, "4GKwDcbp"))
 }

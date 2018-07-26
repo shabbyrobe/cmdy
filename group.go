@@ -58,6 +58,22 @@ func GroupAfter(fn func(Context, error) error) GroupOption {
 	return func(cs *Group) { cs.After = fn }
 }
 
+// GroupHide hides the builders from the usage string. If the builder does not
+// exist in Builders, it will panic.
+func GroupHide(names ...string) GroupOption {
+	return func(cs *Group) {
+		for _, name := range names {
+			if _, ok := cs.Builders[name]; !ok {
+				panic(fmt.Errorf("cannot hide unknown builder %q", name))
+			}
+			if cs.hidden == nil {
+				cs.hidden = make(map[string]bool, len(names))
+			}
+			cs.hidden[name] = true
+		}
+	}
+}
+
 type Group struct {
 	// All Builders in this map will be called in order to create the Usage
 	// string.
@@ -72,6 +88,7 @@ type Group struct {
 
 	usage    string
 	synopsis string
+	hidden   map[string]bool
 
 	// State:
 	subcommand     string
@@ -112,7 +129,9 @@ func (cs *Group) Usage() string {
 		if ln > width {
 			width = ln
 		}
-		names = append(names, name)
+		if cs.hidden == nil || !cs.hidden[name] {
+			names = append(names, name)
+		}
 	}
 	sort.Strings(names)
 
