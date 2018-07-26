@@ -74,6 +74,9 @@ func GroupHide(names ...string) GroupOption {
 	}
 }
 
+// Group implements a command that delegates to a subcommand. It selects a
+// single Builder from a list of Builders based on the value of the first
+// non-flag argument.
 type Group struct {
 	// All Builders in this map will be called in order to create the Usage
 	// string.

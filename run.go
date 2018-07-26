@@ -222,6 +222,7 @@ func FormatError(err error) (msg string, code int) {
 	return
 }
 
+// ProgName attempts to guess the program name from the first argument in os.Args.
 func ProgName() string {
 	if len(os.Args) < 1 {
 		return ""
