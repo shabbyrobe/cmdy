@@ -1,6 +1,7 @@
 package cmdy
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/shabbyrobe/cmdy/args"
@@ -28,10 +29,12 @@ type Error interface {
 	error
 }
 
-type exitError struct {
-	code int
-	err  error
-}
+// QuietExit will prevent cli.Fatal() from printing an error message on exit,
+// but will still call os.Exit() with the status code it represents.
+type QuietExit int
+
+func (e QuietExit) Code() int     { return int(e) }
+func (e QuietExit) Error() string { return fmt.Sprintf("exit code %d", e) }
 
 // ErrWithCode allows you to wrap an error in a status code which will be used
 // by cli.Fatal() as the exit code.
@@ -41,6 +44,15 @@ func ErrWithCode(code int, err error) error {
 		return ee
 	}
 	return &exitError{err: err, code: code}
+}
+
+func NewUsageError(err error) error {
+	return &usageError{err: err}
+}
+
+type exitError struct {
+	code int
+	err  error
 }
 
 func (e *exitError) Code() int     { return e.code }
@@ -84,10 +96,6 @@ func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *args.ArgSe
 		}
 	}
 	u.usage = out
-}
-
-func NewUsageError(err error) error {
-	return &usageError{err: err}
 }
 
 type errorGroup interface {

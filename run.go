@@ -188,6 +188,13 @@ func FormatError(err error) (msg string, code int) {
 	}
 
 	switch err := err.(type) {
+	case QuietExit:
+		// If we don't return here, a '0' code will be interpreted as an
+		// ExitFailure. In the case of QuietExit, it's a little bit less
+		// natural to assume '0' means we want a non-zero exit status even
+		// though we are technically returning an error.
+		return "", err.Code()
+
 	case *usageError:
 		// usageError.usage is lazily populated from a Go text/template in
 		// Runner.Run() before it is returned:
