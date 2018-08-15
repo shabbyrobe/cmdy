@@ -56,8 +56,8 @@ type exitError struct {
 }
 
 func (e *exitError) Code() int     { return e.code }
-func (e *exitError) Error() string { return e.err.Error() }
 func (e *exitError) Cause() error  { return e.err }
+func (e *exitError) Error() string { return e.err.Error() }
 
 type usageError struct {
 	err       error
@@ -65,9 +65,15 @@ type usageError struct {
 	populated bool
 }
 
-func (u *usageError) Code() int     { return ExitUsage }
-func (u *usageError) Error() string { return u.err.Error() }
-func (u *usageError) Cause() error  { return u.err }
+func (u *usageError) Code() int    { return ExitUsage }
+func (u *usageError) Cause() error { return u.err }
+
+func (u *usageError) Error() string {
+	if u.err == nil {
+		return "usage error"
+	}
+	return u.err.Error()
+}
 
 func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *args.ArgSet) {
 	if u.populated {
@@ -78,20 +84,20 @@ func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *args.ArgSe
 	out := strings.TrimSpace(usage) + "\n"
 
 	if flagSet != nil {
-		if out != "" {
-			out += "\n"
-		}
 		fu := flagSet.Usage()
 		if fu != "" {
+			if out != "" {
+				out += "\n"
+			}
 			out += "Flags:\n" + fu
 		}
 	}
 	if argSet != nil {
-		if out != "" {
-			out += "\n"
-		}
 		au := argSet.Usage()
 		if au != "" {
+			if out != "" {
+				out += "\n"
+			}
 			out += "Arguments:\n" + au + "\n"
 		}
 	}

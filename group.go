@@ -191,8 +191,10 @@ func (cs *Group) Run(ctx Context) error {
 	if bld == nil {
 		if cs.Unknown != nil {
 			bld = cs.Unknown
-		} else {
+		} else if cs.subcommand != "" {
 			return NewUsageError(fmt.Errorf("unknown command %q", cs.subcommand))
+		} else {
+			return NewUsageError(nil)
 		}
 	}
 
