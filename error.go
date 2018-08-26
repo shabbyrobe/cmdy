@@ -29,7 +29,7 @@ type Error interface {
 	error
 }
 
-// QuietExit will prevent cli.Fatal() from printing an error message on exit,
+// QuietExit will prevent cmdy.Fatal() from printing an error message on exit,
 // but will still call os.Exit() with the status code it represents.
 type QuietExit int
 
@@ -37,7 +37,7 @@ func (e QuietExit) Code() int     { return int(e) }
 func (e QuietExit) Error() string { return fmt.Sprintf("exit code %d", e) }
 
 // ErrWithCode allows you to wrap an error in a status code which will be used
-// by cli.Fatal() as the exit code.
+// by cmdy.Fatal() as the exit code.
 func ErrWithCode(code int, err error) error {
 	if ee, ok := err.(*exitError); ok {
 		ee.code = code
@@ -46,13 +46,13 @@ func ErrWithCode(code int, err error) error {
 	return &exitError{err: err, code: code}
 }
 
-// NewUsageError wraps an existing error so that cmdy.Run() will print the full
+// NewUsageError wraps an existing error so that cmdy.Fatal() will print the full
 // command usage above the error message.
 func NewUsageError(err error) error {
 	return &usageError{err: err}
 }
 
-// NewUsageError formats an error message so that cmdy.Run() will print the full
+// NewUsageError formats an error message so that cmdy.Fatal() will print the full
 // command usage above it.
 func NewUsageErrorf(msg string, args ...interface{}) error {
 	return &usageError{err: fmt.Errorf(msg, args...)}
