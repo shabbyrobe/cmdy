@@ -46,8 +46,16 @@ func ErrWithCode(code int, err error) error {
 	return &exitError{err: err, code: code}
 }
 
+// NewUsageError wraps an existing error so that cmdy.Run() will print the full
+// command usage above the error message.
 func NewUsageError(err error) error {
 	return &usageError{err: err}
+}
+
+// NewUsageError formats an error message so that cmdy.Run() will print the full
+// command usage above it.
+func NewUsageErrorf(msg string, args ...interface{}) error {
+	return &usageError{err: fmt.Errorf(msg, args...)}
 }
 
 type exitError struct {
