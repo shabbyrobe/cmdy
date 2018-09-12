@@ -1,10 +1,46 @@
 package args
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/shabbyrobe/golib/assert"
 )
+
+func TestArgSetOneString(t *testing.T) {
+	type vals struct {
+		foo string
+	}
+	setup := func() (*ArgSet, *vals) {
+		var v vals
+		as := NewArgSet()
+		as.String(&v.foo, "foo", "Usage...")
+		return as, &v
+	}
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		err := as.Parse([]string{})
+		tt.MustEqual("", v.foo)
+		tt.MustAssert(strings.Contains(err.Error(), "missing arg <foo> at position 1"), err.Error())
+	})
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		tt.MustOK(as.Parse([]string{"a"}))
+		tt.MustEqual("a", v.foo)
+	})
+
+	t.Run("", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as, v := setup()
+		err := as.Parse([]string{"a", "b"})
+		tt.MustEqual("a", v.foo)
+		tt.MustAssert(strings.Contains(err.Error(), "found 1 additional arg"), err.Error())
+	})
+}
 
 func TestNonOptionalArgAfterOptionalArg(t *testing.T) {
 	type vals struct {
