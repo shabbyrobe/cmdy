@@ -7,6 +7,23 @@ import (
 // PrefixMatcher returns a primitive Matcher for use with a command Group that
 // will match a command if the input is an unambiguous prefix of one of the
 // Group's Builders.
+//
+//	grp := NewGroup("grp", Builders{
+//		"foo":  fooBuilder,
+//		"bar":  barBuilder,
+//		"bark": barkBuilder,
+//		"bork": borkBuilder,
+//	})
+//
+//	// Matches must be 2 or more characters to be considered:
+//	m := PrefixMatcher(grp, 2)
+//
+//	$ myprog grp fo   // fooBuilder
+//	$ myprog grp ba   // NOPE; bar or bark
+//	$ myprog grp bar  // barBuilder
+//	$ myprog grp bark // barkBuilder
+//	$ myprog grp b    // NOPE; too short
+//
 func PrefixMatcher(group *Group, minLen int) Matcher {
 	if minLen <= 0 {
 		panic("minLen must be > 0")

@@ -4,31 +4,6 @@ import (
 	"github.com/shabbyrobe/cmdy/args"
 )
 
-/*
-Usage is an optional interface you can add to a Command to specify a more
-complete help message that will be shown by cli.Fatal() if a UsageError is
-returned (for example when the '-help' flag is passed).
-
-The string returned by Usage() is parsed by the text/template package
-(https://golang.org/pkg/text/template/). The template makes the following
-functions available:
-
-	{{Invocation}}
-		Full invocation string for the command, i.e.
-		'cmd sub subsub [options] <args...>'.
-		This invocation does not include parent command flags.
-	{{Synopsis}}
-		Command.Synopsis()
-	{{CommandFull}}
-		Full command name including all parent commands, i.e. 'cmd sub subsub'.
-	{{Command}}
-		Current command name, not including parent command names. i.e. for
-		command 'cmd sub subsub', only 'subsub' is returned.
-*/
-type Usage interface {
-	Usage() string
-}
-
 type Command interface {
 	// Synopsis is the shortest possible complete description of your command,
 	// ideally one sentence.
@@ -45,6 +20,45 @@ type Command interface {
 	Args() *args.ArgSet
 
 	Run(Context) error
+}
+
+/*
+Usage is an optional interface you can add to a Command to specify a more
+complete help message that will be shown by cli.Fatal() if a UsageError is
+returned (for example when the '-help' flag is passed).
+
+The string returned by Usage() is parsed by the text/template package
+(https://golang.org/pkg/text/template/). The template makes the following
+functions available:
+
+	{{Invocation}}
+		Full invocation string for the command, i.e.
+		'cmd sub subsub [options] <args...>'.
+		This invocation does not include parent command flags.
+
+	{{Synopsis}}
+		Command.Synopsis()
+
+	{{CommandFull}}
+		Full command name including all parent commands, i.e. 'cmd sub subsub'.
+
+	{{Command}}
+		Current command name, not including parent command names. i.e. for
+		command 'cmd sub subsub', only 'subsub' is returned.
+
+If your Command does not implement cmdy.Usage, cmdy.DefaultUsage is used.
+
+Your Command instance is used as the 'data' argument to Template.Execute(),
+so any exported fields from your command can be used in the template like
+so: "{{.MyCommandField}}".
+
+If a Command intends cmdy to print the usage in response to an error,
+cmdy.NewUsageError or cmdy.NewUsageErrorf should be returned from Command.Run().
+
+To obtain an actual usage string from a usage error, use cmdy.Format(err).
+*/
+type Usage interface {
+	Usage() string
 }
 
 // Builder creates an instance of your Command. The instance should be a new

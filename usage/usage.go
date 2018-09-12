@@ -157,7 +157,8 @@ func isZeroValue(usable Usable, value string) bool {
 	return false
 }
 
-// Wrap should not be used or relied upon outside cmdy.
+// Wrap should not be used or relied upon outside cmdy. Changes to the API of
+// Wrap will not be considered grounds for a semver bump. Use at your own risk.
 func Wrap(str string, indent string, width int) string {
 	str = strings.TrimSpace(str)
 

@@ -76,7 +76,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 			}
 
 			var buf bytes.Buffer
-			if err := usageTpl.Execute(&buf, nil); err != nil {
+			if err := usageTpl.Execute(&buf, cmd); err != nil {
 				panic(err)
 			}
 
@@ -155,6 +155,7 @@ func (r *Runner) usageTpl(cmd Command, path []string, flagSet *FlagSet, argSet *
 			return ""
 		},
 	}
+
 	tpl = template.New("usage").Funcs(fns)
 
 	var usageRaw string
@@ -162,7 +163,7 @@ func (r *Runner) usageTpl(cmd Command, path []string, flagSet *FlagSet, argSet *
 		usageRaw = ucmd.Usage()
 	}
 	if usageRaw == "" {
-		usageRaw = defaultUsage
+		usageRaw = DefaultUsage
 	}
 
 	var err error
@@ -259,7 +260,18 @@ func baseName(path string) string {
 	return path
 }
 
-const defaultUsage = `
+// DefaultUsage is used to generate your usage string when your Command does
+// not implement cmdy.Usage. You can prepend it to your own usage templates
+// if you want to add to it:
+//
+//	const myCommandUsage = cmdy.DefaultUsage + "\n"+ `
+//	Extra stuff about my command that will be stuck on the end.
+//	Etc etc etc.
+//	`
+//
+//	func (c *myCommand) Usage() string { return myCommandUsage }
+//
+const DefaultUsage = `
 {{if Synopsis -}}
 {{Synopsis}}
 

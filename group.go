@@ -122,7 +122,7 @@ func (cs *Group) Synopsis() string { return cs.synopsis }
 func (cs *Group) Usage() string {
 	out := cs.usage
 	if out == "" {
-		out = defaultUsage
+		out = DefaultUsage
 	}
 	out = strings.TrimSpace(out)
 

@@ -9,6 +9,10 @@ import (
 
 const flagInvocationSpill = 3
 
+// FlagSet is a cmdy specific extension of flag.FlagSet; it is intended to
+// behave the same way but with a few small extensions for the sake of this
+// library. You should use it instead of flag.FlagSet when dealing with cmdy
+// (though you can wrap an existing flag.FlagSet with it easily).
 type FlagSet struct {
 	*flag.FlagSet
 	WrapWidth int

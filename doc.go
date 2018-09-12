@@ -7,5 +7,8 @@ features I like from https://github.com/google/subcommands.
 cmdy focuses on minimalism and tries to imitate and leverage the stdlib as
 much as possible. It does not attempt to replace `flag.Flag`, though it does
 extend it slightly.
+
+cmdy does not prioritise performance (beyond the fact that Go is already
+pretty fast out of the box).
 */
 package cmdy
