@@ -1,7 +1,6 @@
 package flags
 
 import (
-	"flag"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -12,6 +11,8 @@ var splitPattern = regexp.MustCompile(`\s*,\s*`)
 
 type StringList []string
 
+func (s StringList) Strings() []string { return s }
+
 func (s *StringList) String() string {
 	if s == nil {
 		return ""
@@ -19,21 +20,14 @@ func (s *StringList) String() string {
 	return strings.Join(*s, ",")
 }
 
-func (s StringList) Strings() []string {
-	out := make([]string, len(s))
-	copy(out, s)
-	return out
-}
-
 func (s *StringList) Set(v string) error {
 	*s = append(*s, v)
 	return nil
-
 }
 
 type IntList []int
 
-var _ flag.Value = &IntList{}
+func (s IntList) Ints() []int { return s }
 
 func (s *IntList) String() string {
 	if s == nil {
@@ -46,13 +40,36 @@ func (s *IntList) String() string {
 	return strings.Join(out, ",")
 }
 
-func (s IntList) Ints() []int {
-	out := make([]int, len(s))
-	copy(out, s)
-	return out
+func (s *IntList) Set(v string) error {
+	for _, part := range splitPattern.Split(v, -1) {
+		if len(part) == 0 {
+			continue
+		}
+		i, err := strconv.ParseInt(part, 10, 0)
+		if err != nil {
+			return err
+		}
+		*s = append(*s, int(i))
+	}
+	return nil
 }
 
-func (s *IntList) Set(v string) error {
+type Int64List []int64
+
+func (s Int64List) Int64s() []int64 { return s }
+
+func (s *Int64List) String() string {
+	if s == nil {
+		return ""
+	}
+	var out []string
+	for _, i := range *s {
+		out = append(out, fmt.Sprintf("%d", i))
+	}
+	return strings.Join(out, ",")
+}
+
+func (s *Int64List) Set(v string) error {
 	for _, part := range splitPattern.Split(v, -1) {
 		if len(part) == 0 {
 			continue
@@ -61,7 +78,7 @@ func (s *IntList) Set(v string) error {
 		if err != nil {
 			return err
 		}
-		*s = append(*s, int(i))
+		*s = append(*s, i)
 	}
 	return nil
 }
