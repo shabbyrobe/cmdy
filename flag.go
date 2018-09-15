@@ -9,6 +9,13 @@ import (
 
 const flagInvocationSpill = 3
 
+// FlagDoubleDash allows you to globally configure whether long flag names will
+// show in the help message with two dashes or one. This is to appease those
+// who are (not unreasonably) uncomfortable with the fact that the single dash
+// longopt direction the Go team decided to take is totally out of step with
+// the entire Unix world around us.
+var FlagDoubleDash = false
+
 // FlagSet is a cmdy specific extension of flag.FlagSet; it is intended to
 // behave the same way but with a few small extensions for the sake of this
 // library. You should use it instead of flag.FlagSet when dealing with cmdy
@@ -81,12 +88,16 @@ func (u usableFlag) Value() interface{} { return u.flag.Value }
 
 func (u usableFlag) Describe(kind string, hint string) string {
 	name := u.Name()
+	dashes := "-"
+	if FlagDoubleDash && len(name) > 1 {
+		dashes = "--"
+	}
 	if kind != "" && hint != "" {
-		return fmt.Sprintf("-%s=<%s> (%s)", name, kind, hint)
+		return fmt.Sprintf("%s%s=<%s> (%s)", dashes, name, kind, hint)
 	} else if kind != "" {
-		return fmt.Sprintf("-%s=<%s>", name, kind)
+		return fmt.Sprintf("%s%s=<%s>", dashes, name, kind)
 	} else {
-		return fmt.Sprintf("-%s", name)
+		return fmt.Sprintf("%s%s", dashes, name)
 	}
 }
 

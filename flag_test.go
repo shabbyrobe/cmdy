@@ -1,6 +1,7 @@
 package cmdy
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -53,4 +54,37 @@ func TestFlagUsage(t *testing.T) {
 
 	// FIXME: brittle test, but adequate for now.
 	tt.MustEqual(expectedUsage, "\n"+fs.Usage())
+}
+
+func TestFlagDoubleDash(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	FlagDoubleDash = true
+	defer func() {
+		FlagDoubleDash = false
+	}()
+
+	var a, b, a2, b2 bool
+	var s, u, s2, u2 string
+
+	fs := NewFlagSet()
+	fs.BoolVar(&a, "a", true, "")
+	fs.BoolVar(&b, "b", false, "")
+	fs.BoolVar(&a2, "a2", false, "")
+	fs.BoolVar(&b2, "b2", true, "")
+
+	fs.StringVar(&s, "s", "", "")
+	fs.StringVar(&u, "u", "foo", "")
+	fs.StringVar(&s2, "s2", "", "")
+	fs.StringVar(&u2, "u2", "foo", "")
+
+	usage := fs.Usage()
+	tt.MustAssert(strings.Contains(usage, " -a "))
+	tt.MustAssert(strings.Contains(usage, " --a2\n"))
+	tt.MustAssert(strings.Contains(usage, " -b "))
+	tt.MustAssert(strings.Contains(usage, " --b2\n"))
+	tt.MustAssert(strings.Contains(usage, " -s=<string>\n"))
+	tt.MustAssert(strings.Contains(usage, " --s2=<string>\n"))
+	tt.MustAssert(strings.Contains(usage, " -u=<string>\n"))
+	tt.MustAssert(strings.Contains(usage, " --u2=<string>\n"))
 }
