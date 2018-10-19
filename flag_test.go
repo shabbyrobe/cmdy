@@ -88,3 +88,19 @@ func TestFlagDoubleDash(t *testing.T) {
 	tt.MustAssert(strings.Contains(usage, " -u=<string>\n"))
 	tt.MustAssert(strings.Contains(usage, " --u2=<string>\n"))
 }
+
+func TestFlagUsageCollapsing(t *testing.T) {
+	// Flags without descriptions should not be followed by a blank line
+	tt := assert.WrapTB(t)
+
+	var foo, bar int
+	fs := NewFlagSet()
+	fs.IntVar(&foo, "foo", 0, "")
+	fs.IntVar(&bar, "bar", 0, "")
+
+	expected := "" +
+		"  -bar=<int>\n" +
+		"  -foo=<int>\n"
+
+	tt.MustEqual(expected, fs.Usage())
+}

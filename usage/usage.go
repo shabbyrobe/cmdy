@@ -26,16 +26,18 @@ func Usage(width int, usables ...Usable) string {
 		usage, kind, hint := unquoteUsage(usable)
 		s := "  " + usable.Describe(kind, hint)
 
+		defval := usable.DefValue()
+		showDefault := !isZeroValue(usable, defval)
+
 		// Boolean flags of one ASCII letter are so common we
 		// treat them specially, putting their usage on the same line.
 		if len(s) <= 4 { // space, space, '-', 'x'.
 			s += indentFlag
-		} else {
+		} else if usage != "" || showDefault {
 			s += "\n" + indent
 		}
 
-		defval := usable.DefValue()
-		if !isZeroValue(usable, defval) {
+		if showDefault {
 			if containsString(reflect.TypeOf(usable.Value())) {
 				usage += fmt.Sprintf(" (default: %q)", defval)
 			} else {
