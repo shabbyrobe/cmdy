@@ -1,10 +1,11 @@
 Definitely:
-- Bash completion
 - Hidden flags (separate hide functionality for invocation and usage)
 - Configurable invocation overflow (when '--flag=<v>' becomes '[options]')
+- Reformat flags. Go's default output is ugly and confuses users.
+- Optional grouped flags in help message.
 
 Wishlist:
-- Above the fold/below the fold help message
+- Completion helpers
 - Enumerate flags, when invalid flag detected for child command but detected in parent, offer help.
-- Wrappable invocation
+- Wrappable invocation (what did I mean by this again?)
 

@@ -52,6 +52,12 @@ func NewUsageError(err error) error {
 	return &usageError{err: err}
 }
 
+// NewHelpRequest wraps an existing error so that cmdy.Fatal() will print the full
+// command help.
+func NewHelpRequest() error {
+	return &usageError{help: true}
+}
+
 // NewUsageError formats an error message so that cmdy.Fatal() will print the full
 // command usage above it.
 func NewUsageErrorf(msg string, args ...interface{}) error {
@@ -70,6 +76,7 @@ func (e *exitError) Error() string { return e.err.Error() }
 type usageError struct {
 	err       error
 	usage     string
+	help      bool
 	populated bool
 }
 

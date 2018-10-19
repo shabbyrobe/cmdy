@@ -70,7 +70,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		if uerr, ok := rerr.(*usageError); ok {
 			path := CommandPath(cctx)
 
-			usageTpl, err := r.usageTpl(cmd, path, flagSet, argSet)
+			usageTpl, err := r.usageTpl(cmd, uerr.help, path, flagSet, argSet)
 			if err != nil {
 				panic(err)
 			}
@@ -90,7 +90,8 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 
 	if err := flagSet.Parse(args); err != nil {
 		if err == flag.ErrHelp {
-			err = nil // suppress "flag: help requested"
+			// suppress "flag: help requested"
+			return NewHelpRequest()
 		}
 
 		// As at Go 1.11, the only error returned by the flag package that we
@@ -126,7 +127,7 @@ func (r *Runner) Fatal(err error) {
 	os.Exit(code)
 }
 
-func (r *Runner) usageTpl(cmd Command, path []string, flagSet *FlagSet, argSet *args.ArgSet) (tpl *template.Template, rerr error) {
+func (r *Runner) usageTpl(cmd Command, fullHelp bool, path []string, flagSet *FlagSet, argSet *args.ArgSet) (tpl *template.Template, rerr error) {
 	// Update the documentation for the Usage interface if you add new functions
 	// to this map:
 	fns := template.FuncMap{
@@ -153,6 +154,9 @@ func (r *Runner) usageTpl(cmd Command, path []string, flagSet *FlagSet, argSet *
 				return path[len(path)-1]
 			}
 			return ""
+		},
+		"ShowFullHelp": func() bool {
+			return fullHelp
 		},
 	}
 

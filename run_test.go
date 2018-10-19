@@ -84,6 +84,35 @@ func TestRun(t *testing.T) {
 	})
 }
 
+func TestRunFullHelp(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	// need to configure one argument so we can trip a usage error by omitting it.
+	var foo string
+	as := args.NewArgSet()
+	as.String(&foo, "foo", "usage!")
+
+	tc := &testCmd{args: as, usage: "foo{{if ShowFullHelp}}bar{{end}}"}
+	bld := func() (Command, error) { return tc, nil }
+	rn := newTestRunner()
+
+	{ // --help should ShowFullHelp
+		err := rn.Run(context.Background(), "test", []string{"--help"}, bld)
+		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+		msg, code := FormatError(err)
+		tt.MustAssert(strings.HasPrefix(msg, "foobar\n"))
+		tt.MustEqual(ExitUsage, code)
+	}
+
+	{ // UsageError should not ShowFullHelp
+		err := rn.Run(context.Background(), "test", []string{}, bld)
+		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+		msg, code := FormatError(err)
+		tt.MustAssert(strings.HasPrefix(msg, "foo\n"))
+		tt.MustEqual(ExitUsage, code)
+	}
+}
+
 func errCode(err error) int {
 	switch err := err.(type) {
 	case interface{ Code() int }:

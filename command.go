@@ -46,6 +46,12 @@ functions available:
 		Current command name, not including parent command names. i.e. for
 		command 'cmd sub subsub', only 'subsub' is returned.
 
+	{{if ShowFullHelp}}...{{end}}
+		Help section contained inside the '...' should only be shown if the
+		command's '--help' was requested, not if the command's usage is to
+		be shown.
+
+
 If your Command does not implement cmdy.Usage, cmdy.DefaultUsage is used.
 
 Your Command instance is used as the 'data' argument to Template.Execute(),

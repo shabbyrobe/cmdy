@@ -89,16 +89,25 @@ func run() error {
 ```
 
 You can customise the help message by implementing the optional `cmdy.Usage`
-interface:
+interface. ``Usage()`` is a go ``text/template`` that has access to your
+command as its vars:
 
 ```go
 const myCommandUsage = `
 {{Synopsis}}
 
 Usage: {{Invocation}}
+
+Stuff is {{.Stuff}}
 `
+
+type myCommand struct {
+    Stuff string
+}
 
 var _ cmdy.Usage = &myCommand{}
 
 func (t *myCommand) Usage() string { return myCommandUsage }
+
+// myCommand implements the rest of cmdy.Command...
 ```
