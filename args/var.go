@@ -135,14 +135,14 @@ func (i *IntList) String() string {
 	if i == nil {
 		return ""
 	}
-	var out strings.Builder
+	var out string
 	for idx, v := range *i {
 		if idx != 0 {
-			out.WriteByte(',')
+			out += ","
 		}
-		out.WriteString(strconv.FormatInt(int64(v), 10))
+		out += strconv.FormatInt(int64(v), 10)
 	}
-	return out.String()
+	return out
 }
 
 func (i *IntList) Get() interface{} { return []int(*i) }

@@ -145,7 +145,10 @@ func (cs *Group) Usage() string {
 	sort.Strings(names)
 
 	// +4 == command name, +2 == space between command name and synopsis
-	indent := strings.Repeat(" ", width+4+2)
+	indent := make([]byte, width+4+2)
+	for i := 0; i < len(indent); i++ {
+		indent[i] = ' '
+	}
 
 	for _, l := range names {
 		s, err := cs.Builders[l]()
