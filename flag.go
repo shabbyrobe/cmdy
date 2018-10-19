@@ -19,7 +19,7 @@ var FlagDoubleDash = false
 // FlagSet is a cmdy specific extension of flag.FlagSet; it is intended to
 // behave the same way but with a few small extensions for the sake of this
 // library. You should use it instead of flag.FlagSet when dealing with cmdy
-// (though you can wrap an existing flag.FlagSet with it easily).
+// (though you can wrap an existing flag.FlagSet with FlagSetFromStd easily).
 type FlagSet struct {
 	*flag.FlagSet
 	WrapWidth int
@@ -32,6 +32,19 @@ func NewFlagSet() *FlagSet {
 	}
 	fs.FlagSet.SetOutput(&devNull{})
 	return fs
+}
+
+// FlagSetFromStd wraps an existing flag.FlagSet instance and ensures it is
+// correctly configured for use with cmdy.
+//
+// The FlagSet will be modified. Custom output handlers are removed and the
+// error handling is changed to ContinueOnError.
+func FlagSetFromStd(fs *flag.FlagSet) *FlagSet {
+	fs.Init(fs.Name(), flag.ContinueOnError)
+	fs.SetOutput(&devNull{})
+	return &FlagSet{
+		FlagSet: fs,
+	}
 }
 
 // HideUsage prevents the "Flags" section from appearing in the Usage string.
