@@ -151,12 +151,10 @@ func (cs *Group) Usage() string {
 	}
 
 	for _, l := range names {
-		s, err := cs.Builders[l]()
-		if err == nil {
-			syn := s.Synopsis()
-			syn = usage.Wrap(syn, indent, 0)
-			out += fmt.Sprintf("    %-*s  %s\n", width, l, syn)
-		}
+		s, _ := cs.Builders[l]()
+		syn := s.Synopsis()
+		syn = usage.Wrap(syn, string(indent), 0)
+		out += fmt.Sprintf("    %-*s  %s\n", width, l, syn)
 	}
 	return out
 }

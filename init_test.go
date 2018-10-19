@@ -14,12 +14,20 @@ type testCmd struct {
 	run      func(c Context) error
 }
 
-func testCmdRunBuilder(r func(c Context) error) func() (Command, error) {
-	return func() (Command, error) { return &testCmd{run: r}, nil }
+func testCmdRunBuilder(r func(c Context) error) func() (Command, Init) {
+	return func() (Command, Init) { return &testCmd{run: r}, nil }
 }
 
-func builder(c Command) func() (Command, error) {
-	return func() (Command, error) { return c, nil }
+func testCmdRunInitBuilder(r func(c Context) error, init Init) func() (Command, Init) {
+	return func() (Command, Init) { return &testCmd{run: r}, init }
+}
+
+func testBuilder(c Command) func() (Command, Init) {
+	return func() (Command, Init) { return c, nil }
+}
+
+func testInitBuilder(c Command, init Init) func() (Command, Init) {
+	return func() (Command, Init) { return c, init }
 }
 
 func (t *testCmd) Synopsis() string   { return t.synopsis }

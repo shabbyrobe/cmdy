@@ -22,7 +22,7 @@ func TestCommand_FlagsArgs(t *testing.T) {
 		args:  as,
 	}
 
-	tt.MustOK(Run(context.Background(), []string{"-foo", "foo", "bar"}, builder(c)))
+	tt.MustOK(Run(context.Background(), []string{"-foo", "foo", "bar"}, testBuilder(c)))
 	tt.MustEqual("foo", foo)
 	tt.MustEqual("bar", bar)
 }
@@ -37,7 +37,7 @@ func TestCommand_TemplateDefault(t *testing.T) {
 		synopsis: "synopsis",
 	}
 
-	usage := Run(context.Background(), []string{"-help"}, builder(c))
+	usage := Run(context.Background(), []string{"-help"}, testBuilder(c))
 	txt, code := FormatError(usage)
 	tt.MustEqual(127, code)
 
@@ -70,7 +70,7 @@ func (t *testUsageVarsCmd) Args() *args.ArgSet {
 func TestUsageVars(t *testing.T) {
 	assertUsage := func(tt assert.T, code int, in []string, out string) {
 		c := &testUsageVarsCmd{Stuff: "stuff"}
-		usage := Run(context.Background(), in, builder(c))
+		usage := Run(context.Background(), in, testBuilder(c))
 		txt, ecode := FormatError(usage)
 		tt.MustEqual(code, ecode)
 		tt.MustEqual(out, strings.Split(txt, "\n")[0])

@@ -56,7 +56,8 @@ If your Command does not implement cmdy.Usage, cmdy.DefaultUsage is used.
 
 Your Command instance is used as the 'data' argument to Template.Execute(),
 so any exported fields from your command can be used in the template like
-so: "{{.MyCommandField}}".
+so: "{{.MyCommandField}}". The Command used as the template data will NOT
+have had its Init() function called, if one was returned by your Builder.
 
 If a Command intends cmdy to print the usage in response to an error,
 cmdy.NewUsageError or cmdy.NewUsageErrorf should be returned from Command.Run().
@@ -67,6 +68,49 @@ type Usage interface {
 	Usage() string
 }
 
-// Builder creates an instance of your Command. The instance should be a new
-// instance, not a recycled instance.
-type Builder func() (Command, error)
+// UsageCommand is an aggregate interface to make it simpler for you to
+// use Go's "implements" "keyword":
+//
+//	var _ cmdy.UsageCommand = &MyCommand{}
+//
+type UsageCommand interface {
+	Command
+	Usage
+}
+
+/*
+Builder creates an instance of your Command and returns an optional Init
+function used to populate expensive dependencies. The instance returned
+in the first return should be a new instance, not a recycled instance, and
+should only contain static dependency values that are cheap to create:
+
+	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
+		return &MyCommand{}, nil
+	}
+	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
+		return &MyCommand{SimpleDep: "hello"}, nil
+	}
+	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
+		cmd := &MyCommand{SimpleDep: "hello"}
+		return cmd, func() error {
+			cmd.ExpensiveDep = acquireExpensiveDependency()
+			return nil
+		}
+	}
+	var badBuilder = func() (cmdy.Command, cmdy.Init) {
+		cmd := &MyCommand{
+			SimpleDep:    "nope",
+			ExpensiveDep: acquireExpensiveDependency(),
+		}
+		return cmd, nil
+	}
+
+The reason for this design decision is a desire to avoid using a separate
+struct for the help messages. cmdy will always call your builder to get the
+Usage, so you don't want to create expensive dependencies in that situation.
+*/
+type Builder func() (Command, Init)
+
+// Init is used to wire expensive-to-construct dependencies into an instance of
+// a Command.
+type Init func() error

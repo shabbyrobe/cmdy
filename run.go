@@ -42,9 +42,11 @@ func NewStandardRunner() *Runner {
 }
 
 func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
-	cmd, err := b()
-	if err != nil {
-		return err
+	cmd, init := b()
+	if init != nil {
+		if err := init(); err != nil {
+			return err
+		}
 	}
 
 	var (

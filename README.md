@@ -10,11 +10,16 @@ features I like from https://github.com/google/subcommands.
 much as possible. It does not attempt to replace `flag.Flag`, though it does
 extend it slightly.
 
+`cmdy` is liberally documented in [GoDoc](https://godoc.org/github.com/shabbyrobe/cmdy),
+though a brief overview is provided in this README. If anything is unclear, please
+submit a GitHub issue.
+
 
 Features
 --------
 
-- `ArgSet`, similar to `flag.FlagSet` but for positional arguments.
+- `ArgSet`, similar to `flag.FlagSet` but for positional arguments. The
+  `github.com/shabbyrobe/cmdy/args` package can be used independently.
 - Simple subcommand (and sub-sub command (and sub-sub-sub command)) support.
 - `context.Context` support (via `cmdy.Context`, which is also a
   `context.Context`).
@@ -27,7 +32,7 @@ Usage
 Subcommands are easy to create; you need a builder and a command:
 
 ```go
-func myCommandBuilder() (cmdy.Command, error) {
+func myCommandBuilder() (cmdy.Command, cmdy.Init) {
 	return &myCommand{}, nil
 }
 
@@ -66,8 +71,8 @@ func main() {
 }
 
 func run() error {
-	bld := func() (cmdy.Command, error) {
-		nestedGroupBuilder := func() (cmdy.Command, error) {
+	bld := func() (cmdy.Command, cmdy.Init) {
+		nestedGroupBuilder := func() (cmdy.Command, cmdy.Init) {
 			return cmdy.NewGroup(
 				"Nested group",
 				cmdy.Builders{
@@ -85,6 +90,22 @@ func run() error {
 		), nil
 	}
 	return cmdy.Run(context.Background(), os.Args[1:], bld)
+}
+```
+
+Builders can supply an optional initialisation function which wires up any
+dependencies which are expensive to create. This will not be called when
+``--help`` is requested::
+
+```
+func myCommandBuilder() (cmdy.Command, cmdy.Init) {
+	cmd := &myCommand{
+        CheapDependency: "foo",
+    }
+    return cmd, func() (err error) {
+        cmd.ExpensiveDependency, err = getExpensiveDependency()
+        return err
+    }
 }
 ```
 

@@ -15,7 +15,7 @@ func TestGroup(t *testing.T) {
 
 	var foo, bar = errors.New("foo"), errors.New("bar")
 
-	bldr := func() (Command, error) {
+	bldr := func() (Command, Init) {
 		return NewGroup("set", Builders{
 			"foo": testCmdRunBuilder(func(c Context) error {
 				return foo
@@ -34,9 +34,9 @@ func TestGroup_SubcommandArgs(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
-	bldr := func() (Command, error) {
+	bldr := func() (Command, Init) {
 		return NewGroup("set", Builders{
-			"foo": func() (Command, error) {
+			"foo": func() (Command, Init) {
 				p = ""
 				as := args.NewArgSet()
 				as.String(&p, "pants", "Usage...")
@@ -59,9 +59,9 @@ func TestGroup_SubcommandFlags(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
-	bldr := func() (Command, error) {
+	bldr := func() (Command, Init) {
 		return NewGroup("set", Builders{
-			"foo": func() (Command, error) {
+			"foo": func() (Command, Init) {
 				fs := NewFlagSet()
 				fs.StringVar(&p, "pants", "", "Usage...")
 				return &testCmd{flags: fs}, nil
@@ -81,10 +81,10 @@ func TestGroup_Unknown(t *testing.T) {
 
 	var foo = errors.New("foo")
 
-	bldr := func() (Command, error) {
+	bldr := func() (Command, Init) {
 		return NewGroup("set", Builders{},
-			GroupUnknown(func() (Command, error) {
-				return nil, foo
+			GroupUnknown(func() (Command, Init) {
+				return nil, func() error { return foo }
 			}),
 		), nil
 	}
@@ -98,10 +98,10 @@ func TestGroup_Hide(t *testing.T) {
 
 	grp := NewGroup("set",
 		Builders{
-			"4GKwDcbp": func() (Command, error) { return &testCmd{synopsis: "4GKwDcbp"}, nil },
-			"9rdjKX3j": func() (Command, error) { return &testCmd{synopsis: "9rdjKX3j"}, nil },
-			"GM68tb0F": func() (Command, error) { return &testCmd{synopsis: "GM68tb0F"}, nil },
-			"OZJpKePU": func() (Command, error) { return &testCmd{synopsis: "OZJpKePU"}, nil },
+			"4GKwDcbp": func() (Command, Init) { return &testCmd{synopsis: "4GKwDcbp"}, nil },
+			"9rdjKX3j": func() (Command, Init) { return &testCmd{synopsis: "9rdjKX3j"}, nil },
+			"GM68tb0F": func() (Command, Init) { return &testCmd{synopsis: "GM68tb0F"}, nil },
+			"OZJpKePU": func() (Command, Init) { return &testCmd{synopsis: "OZJpKePU"}, nil },
 		},
 		GroupHide("9rdjKX3j", "OZJpKePU"),
 	)

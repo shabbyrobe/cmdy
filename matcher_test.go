@@ -26,7 +26,7 @@ func TestMatcher(t *testing.T) {
 			tt := assert.WrapTB(t)
 			bldrs := Builders{}
 			for _, name := range c.options {
-				bldrs[name] = func() (Command, error) {
+				bldrs[name] = func() (Command, Init) {
 					return &testCmd{}, nil
 				}
 			}

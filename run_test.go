@@ -2,6 +2,7 @@ package cmdy
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/args"
@@ -17,7 +18,7 @@ func TestRun(t *testing.T) {
 		as.String(&foo, "foo", "usage!")
 
 		tc := &testCmd{args: as}
-		bld := func() (Command, error) { return tc, nil }
+		bld := func() (Command, Init) { return tc, nil }
 		rn := newTestRunner()
 
 		// missing argument should produce a usage error:
@@ -51,7 +52,7 @@ func TestRun(t *testing.T) {
 		fs.StringVar(&foo, "foo", "", "usage!")
 
 		tc := &testCmd{flags: fs}
-		bld := func() (Command, error) { return tc, nil }
+		bld := func() (Command, Init) { return tc, nil }
 		rn := newTestRunner()
 
 		// no arguments, no flags, no worries:
@@ -93,7 +94,7 @@ func TestRunFullHelp(t *testing.T) {
 	as.String(&foo, "foo", "usage!")
 
 	tc := &testCmd{args: as, usage: "foo{{if ShowFullHelp}}bar{{end}}"}
-	bld := func() (Command, error) { return tc, nil }
+	bld := func() (Command, Init) { return tc, nil }
 	rn := newTestRunner()
 
 	{ // --help should ShowFullHelp
