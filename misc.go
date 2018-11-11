@@ -1,6 +1,9 @@
 package cmdy
 
-import "os"
+import (
+	"io"
+	"os"
+)
 
 // IsPipe probably returns true if the input is receiving piped data
 // from another program, rather than from a terminal.
@@ -15,10 +18,15 @@ import "os"
 //		// ...
 //	}
 //
-func IsPipe(f interface{ Stat() (os.FileInfo, error) }) bool {
-	if f == nil {
+func IsPipe(in io.Reader) bool {
+	if in == nil {
 		return false
 	}
-	fi, _ := f.Stat()
-	return (fi.Mode() & os.ModeCharDevice) == 0
+	type pipe interface{ Stat() (os.FileInfo, error) }
+	if inPipe, ok := in.(pipe); ok {
+		fi, _ := inPipe.Stat()
+		return (fi.Mode() & os.ModeCharDevice) == 0
+	} else {
+		return false
+	}
 }

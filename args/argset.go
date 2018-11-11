@@ -115,7 +115,11 @@ func (a *ArgSet) Parse(input []string) error {
 // of strings pointed to by p. If more args are defined after any Remaining
 // method is called, args will panic.
 //
-// See Remaining for an explanation of minmax and usage.
+//	Use args.AnyLen to allow an arbitrary number of remaining args.
+// 	Use args.Min(2) to require at least 2 args.
+// 	Use args.Max(2) to require at most 2 args.
+// 	Use args.MinMax(1, 3) to require at least 1 arg and at most 3 args.
+//
 func (a *ArgSet) Remaining(p *[]string, name string, minmax Range, usage string) {
 	a.RemainingVar((*StringList)(p), name, minmax, usage)
 }
