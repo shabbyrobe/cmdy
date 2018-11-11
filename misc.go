@@ -5,26 +5,51 @@ import (
 	"os"
 )
 
-// IsPipe probably returns true if the input is receiving piped data
+// ReaderIsPipe probably returns true if the input is receiving piped data
 // from another program, rather than from a terminal.
-//
-// IsPipe is not compatible with Runner.Stdin, though that may change.
 //
 // This may not work on Windows.
 //
 // Typical usage:
 //
-//	if IsPipe(os.Stdin) {
-//		// ...
+//	if ReaderIsPipe(os.Stdin) {
+//		// Using stdin directly
 //	}
 //
-func IsPipe(in io.Reader) bool {
-	if in == nil {
+//	if ReaderIsPipe(ctx.Stdin()) {
+//		// Using cmdy.Context
+//	}
+//
+func ReaderIsPipe(in io.Reader) bool {
+	return isPipe(in)
+}
+
+// WriterIsPipe probably returns true if the Writer represents a pipe to
+// another program, rather than to a terminal.
+//
+// This may not work on Windows.
+//
+// Typical usage:
+//
+//	if IsWriterPipe(os.Stdout) {
+//		// Using stdout directly
+//	}
+//
+//	if IsWriterPipe(ctx.Stdin()) {
+//		// Using cmdy.Context
+//	}
+//
+func WriterIsPipe(out io.Writer) bool {
+	return isPipe(out)
+}
+
+func isPipe(v interface{}) bool {
+	if v == nil {
 		return false
 	}
 	type pipe interface{ Stat() (os.FileInfo, error) }
-	if inPipe, ok := in.(pipe); ok {
-		fi, _ := inPipe.Stat()
+	if pv, ok := v.(pipe); ok {
+		fi, _ := pv.Stat()
 		return (fi.Mode() & os.ModeCharDevice) == 0
 	} else {
 		return false
