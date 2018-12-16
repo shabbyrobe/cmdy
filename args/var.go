@@ -98,7 +98,6 @@ type remaining struct {
 	Range
 }
 
-func (r *remaining) Get() interface{}   { return r.arg.Get() }
 func (r *remaining) Set(s string) error { return r.arg.Set(s) }
 func (r *remaining) String() string {
 	if r.arg != nil {

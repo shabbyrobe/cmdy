@@ -11,12 +11,30 @@ const indent = "        "
 
 var indentFlag = indent[:len(indent)-4]
 
+// Usable is a common interface that should support both flag.Flag and arg.Arg
+// for the purpose of building a usage statement.
 type Usable interface {
 	Name() string
 	Usage() string
 	DefValue() string
 	Value() interface{}
+
+	// Describe is used to format the description of this Usable in the usage
+	// statement according to the Usable's preferredtemplate. Flags are
+	// formatted differently to args, but the inputs are the same.
 	Describe(kind string, hint string) string
+}
+
+// Hinter allows flag.Var or arg.Var implementations to customise the type and
+// hint portion of the usage output, for example:
+//	--flag=<kind> (hint)
+//
+// Empty strings will remove either part from the output:
+//	--flag=<kind> (hint)
+//	--flag (hint)
+//
+type Hinter interface {
+	Hint() (kind, hint string)
 }
 
 func Usage(width int, usables ...Usable) string {
@@ -99,36 +117,45 @@ func unquoteUsage(usable Usable) (usage string, name string, hint string) {
 	return
 }
 
-func Kind(usable Usable) (name, hint string) {
+func Kind(usable Usable) (kind, hint string) {
 	vt := reflect.TypeOf(usable.Value())
 	for vt.Kind() == reflect.Ptr {
 		vt = vt.Elem()
 	}
-	return kind(vt)
+
+	if hv, ok := usable.Value().(Hinter); ok {
+		kind, hint = hv.Hint()
+	} else {
+		kind, hint = kindFromType(vt)
+	}
+
+	return kind, hint
 }
 
-func kind(vt reflect.Type) (name, hint string) {
+func kindFromType(vt reflect.Type) (kind, typeHint string) {
 	if containsDuration(vt) {
-		name = "duration"
-		hint = "formats: '1h2s', '-3.4ms', units: h, m, s, ms, us, ns"
+		kind = "duration"
+		typeHint = "formats: '1h2s', '-3.4ms', units: h, m, s, ms, us, ns"
+
 	} else {
 		switch vt.Kind() {
 		case reflect.Bool:
-			name = ""
+			kind = ""
 		case reflect.Float32, reflect.Float64:
-			name = "float"
+			kind = "float"
 		case reflect.String:
-			name = "string"
+			kind = "string"
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			name = "int"
+			kind = "int"
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			name = "uint"
+			kind = "uint"
 		case reflect.Slice:
-			name, hint = kind(vt.Elem())
-			// name += "[]"
+			kind, typeHint = kindFromType(vt.Elem())
+			// kind += "[]"
 		}
 	}
-	return name, hint
+
+	return kind, typeHint
 }
 
 // isZeroValue guesses whether the string represents the zero

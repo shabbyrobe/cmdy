@@ -10,5 +10,6 @@ extend it slightly.
 
 cmdy does not prioritise performance (beyond the fact that Go is already
 pretty fast out of the box).
+
 */
 package cmdy

@@ -104,3 +104,55 @@ func TestFlagUsageCollapsing(t *testing.T) {
 
 	tt.MustEqual(expected, fs.Usage())
 }
+
+type (
+	hintOnlyVar string
+	kindOnlyVar string
+	hintBothVar string
+	hintNoneVar string
+)
+
+func (h hintOnlyVar) String() string            { return string(h) }
+func (h hintOnlyVar) Hint() (kind, hint string) { return "", "hint" }
+func (h *hintOnlyVar) Set(s string) error       { *h = hintOnlyVar(s); return nil }
+
+func (h kindOnlyVar) String() string            { return string(h) }
+func (h kindOnlyVar) Hint() (kind, hint string) { return "kind", "" }
+func (h *kindOnlyVar) Set(s string) error       { *h = kindOnlyVar(s); return nil }
+
+func (h hintBothVar) String() string            { return string(h) }
+func (h hintBothVar) Hint() (kind, hint string) { return "kind", "hint" }
+func (h *hintBothVar) Set(s string) error       { *h = hintBothVar(s); return nil }
+
+func (h hintNoneVar) String() string            { return string(h) }
+func (h hintNoneVar) Hint() (kind, hint string) { return "", "" }
+func (h *hintNoneVar) Set(s string) error       { *h = hintNoneVar(s); return nil }
+
+const expectedHintableUsage = `
+  -hintboth=<kind> (hint)
+        hint both
+  -hintnone
+        hint none
+  -hintonly (hint)
+        hint only
+  -kindonly=<kind>
+        kind only
+`
+
+func TestFlagVarHintable(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	var hintOnly hintOnlyVar
+	var kindOnly kindOnlyVar
+	var hintBoth hintBothVar
+	var hintNone hintNoneVar
+
+	fs := NewFlagSet()
+	fs.Var(&hintOnly, "hintonly", "hint only")
+	fs.Var(&kindOnly, "kindonly", "kind only")
+	fs.Var(&hintBoth, "hintboth", "hint both")
+	fs.Var(&hintNone, "hintnone", "hint none")
+
+	// FIXME: brittle test, but adequate for now.
+	tt.MustEqual(expectedHintableUsage, "\n"+fs.Usage())
+}

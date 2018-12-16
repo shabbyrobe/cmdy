@@ -33,14 +33,21 @@ func (a *Arg) Describe(kind string, hint string) string {
 		return fmt.Sprintf("<%s> (%s) %s", name, kind, hint)
 	} else if kind != "" {
 		return fmt.Sprintf("<%s> (%s)", name, kind)
+	} else if hint != "" {
+		return fmt.Sprintf("<%s> %s", name, hint)
 	} else {
 		return fmt.Sprintf("<%s>", name)
 	}
 }
 
-// ArgVal is exactly the same as flag.Getter and should be 100% compatible.
+// ArgVal is exactly the same as flag.Value and should be 100% compatible.
 type ArgVal interface {
-	Get() interface{}
 	Set(string) error
 	String() string
+}
+
+// ArgGetter is exactly the same as flag.Getter and should be 100% compatible.
+type ArgGetter interface {
+	ArgVal
+	Get() interface{}
 }

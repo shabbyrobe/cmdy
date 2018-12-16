@@ -105,8 +105,11 @@ func (u usableFlag) Describe(kind string, hint string) string {
 	if FlagDoubleDash && len(name) > 1 {
 		dashes = "--"
 	}
+
 	if kind != "" && hint != "" {
 		return fmt.Sprintf("%s%s=<%s> (%s)", dashes, name, kind, hint)
+	} else if hint != "" {
+		return fmt.Sprintf("%s%s (%s)", dashes, name, hint)
 	} else if kind != "" {
 		return fmt.Sprintf("%s%s=<%s>", dashes, name, kind)
 	} else {

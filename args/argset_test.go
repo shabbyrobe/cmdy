@@ -223,3 +223,55 @@ func TestRemainingAfterOptional(t *testing.T) {
 		tt.MustEqual(0, len(v.rem))
 	})
 }
+
+type (
+	hintOnlyVar string
+	kindOnlyVar string
+	hintBothVar string
+	hintNoneVar string
+)
+
+func (h hintOnlyVar) String() string            { return string(h) }
+func (h hintOnlyVar) Hint() (kind, hint string) { return "", "hint" }
+func (h *hintOnlyVar) Set(s string) error       { *h = hintOnlyVar(s); return nil }
+
+func (h kindOnlyVar) String() string            { return string(h) }
+func (h kindOnlyVar) Hint() (kind, hint string) { return "kind", "" }
+func (h *kindOnlyVar) Set(s string) error       { *h = kindOnlyVar(s); return nil }
+
+func (h hintBothVar) String() string            { return string(h) }
+func (h hintBothVar) Hint() (kind, hint string) { return "kind", "hint" }
+func (h *hintBothVar) Set(s string) error       { *h = hintBothVar(s); return nil }
+
+func (h hintNoneVar) String() string            { return string(h) }
+func (h hintNoneVar) Hint() (kind, hint string) { return "", "" }
+func (h *hintNoneVar) Set(s string) error       { *h = hintNoneVar(s); return nil }
+
+const expectedHintableUsage = `
+  <hintonly> hint
+        hint only
+  <kindonly> (kind)
+        kind only
+  <hintboth> (kind) hint
+        hint both
+  <hintnone>
+        hint none
+`
+
+func TestArgSetHintable(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	var hintOnly hintOnlyVar
+	var kindOnly kindOnlyVar
+	var hintBoth hintBothVar
+	var hintNone hintNoneVar
+
+	set := NewArgSet()
+	set.Var(&hintOnly, "hintonly", "hint only")
+	set.Var(&kindOnly, "kindonly", "kind only")
+	set.Var(&hintBoth, "hintboth", "hint both")
+	set.Var(&hintNone, "hintnone", "hint none")
+
+	// FIXME: brittle test, but adequate for now.
+	tt.MustEqual(expectedHintableUsage, "\n"+set.Usage())
+}
