@@ -247,6 +247,23 @@ func ProgName() string {
 	return baseName(os.Args[0])
 }
 
+func NewBufferedRunner() *BufferedRunner {
+	br := &BufferedRunner{}
+	br.Runner = Runner{
+		Stdin:  &br.StdinBuffer,
+		Stdout: &br.StdoutBuffer,
+		Stderr: &br.StderrBuffer,
+	}
+	return br
+}
+
+type BufferedRunner struct {
+	Runner
+	StdinBuffer  bytes.Buffer
+	StdoutBuffer bytes.Buffer
+	StderrBuffer bytes.Buffer
+}
+
 // baseName is a cut-down remix of filepath.Base that saves us a dependency
 // and skips use-cases that we don't need to worry about, like windows volume
 // names, etc, because we are only using it to grab the program name.
