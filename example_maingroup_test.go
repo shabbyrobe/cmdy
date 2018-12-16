@@ -56,7 +56,10 @@ func Example_maingroup() {
 			// subcommand is run:
 			cmdy.GroupAfter(func(ctx cmdy.Context, err error) error {
 				fmt.Fprintf(ctx.Stdout(), "after! flag: %v\n", testFlag)
-				return nil
+
+				// Careful: failing to return the passed in error here will
+				// swallow the error.
+				return err
 			}),
 		), nil
 	}
