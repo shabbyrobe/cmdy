@@ -25,6 +25,16 @@ func DefaultRunner() *Runner {
 	return defaultRunner
 }
 
+// Runner builds and runs your command.
+//
+// Runner provides access to standard input and output streams to cmdy.Command.
+// Commands should access these streams via Runner rather than via os.Stdin, etc.
+//
+// This is not strictly required, and some situations may necessitate using the
+// os streams directly, but using os streams directly without a good reason
+// limits your command's testability.
+//
+// See NewBufferedRunner(), NewStandardRunner()
 type Runner struct {
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -41,6 +51,11 @@ func NewStandardRunner() *Runner {
 	}
 }
 
+// Run builds and runs your command.
+//
+// If using Run() in your main() function, the returned error should be passed
+// to Runner.Fatal(), not log.Fatal(), if you want nice errors and usage printed.
+//
 func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
 	cmd, init := b()
 	if init != nil {
@@ -116,6 +131,13 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 	return cmd.Run(cctx)
 }
 
+// Fatal prints an error formatted for the end user, then calls os.Exit with
+// the exit code detected in err.
+//
+// Calls to Fatal() will prevent any defer calls from running. See cmdy.Fatal()
+// for a demonstration of the recommended usage pattern for dealing with Fatal
+// errors.
+//
 func (r *Runner) Fatal(err error) {
 	msg, code := FormatError(err)
 	if msg != "" {
@@ -185,6 +207,23 @@ func Run(ctx context.Context, args []string, b Builder) (rerr error) {
 	return DefaultRunner().Run(ctx, name, args, b)
 }
 
+// Fatal prints an error formatted for the end user using the global
+// DefaultRunner, then calls os.Exit with the exit code detected in err.
+//
+// Calls to Fatal() will prevent any defer calls from running. This pattern is
+// strongly recommended instead of a straight main() function:
+//
+//	func main() {
+//		if err := run(); err != nil {
+//			cmdy.Fatal(err)
+//		}
+//	}
+//
+//	func run() error {
+//		// your command in here
+//		return nil
+//	}
+//
 func Fatal(err error) {
 	DefaultRunner().Fatal(err)
 }
@@ -247,6 +286,8 @@ func ProgName() string {
 	return baseName(os.Args[0])
 }
 
+// NewBufferedRunner returns a Runner that wires Stdin, Stdout and Stderr up to
+// bytes.Buffer instances.
 func NewBufferedRunner() *BufferedRunner {
 	br := &BufferedRunner{}
 	br.Runner = Runner{
