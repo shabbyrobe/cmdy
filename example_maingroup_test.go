@@ -3,7 +3,6 @@ package cmdy_test
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/shabbyrobe/cmdy"
 	"github.com/shabbyrobe/cmdy/args"
@@ -21,6 +20,9 @@ func (cmd *mainGroupCommand) Run(ctx cmdy.Context) error {
 }
 
 func Example_maingroup() {
+	// Ignore this, pretend it isn't here.
+	cmdy.Reset()
+
 	// builders allow multiple instances of the command to be created.
 	mainBuilder := func() (cmdy.Command, cmdy.Init) {
 		// flag values should be scoped to the builder:
@@ -66,7 +68,7 @@ func Example_maingroup() {
 
 	args := []string{"-testflag", "mycmd"}
 	if err := cmdy.Run(context.Background(), args, mainBuilder); err != nil {
-		log.Fatal(err)
+		cmdy.Fatal(err)
 	}
 
 	// Output:

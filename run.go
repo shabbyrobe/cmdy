@@ -18,11 +18,20 @@ var (
 )
 
 // DefaultRunner is the global runner used by Run() and Fatal().
+//
+// It is intended to be used once from your main() function and is not safe for
+// concurrent use. More sophisticated use cases can be supported by creating
+// your own Runner directly.
 func DefaultRunner() *Runner {
 	if defaultRunner == nil {
 		defaultRunner = NewStandardRunner()
 	}
 	return defaultRunner
+}
+
+// Reset is here just for testing purposes.
+func Reset() {
+	defaultRunner = nil
 }
 
 // Runner builds and runs your command.
@@ -202,6 +211,17 @@ func (r *Runner) usageTpl(cmd Command, fullHelp bool, path []string, flagSet *Fl
 	return tpl, nil
 }
 
+// Run the command built by Builder b using the DefaultRunner, passing in the
+// provided args.
+//
+// The args should not include the program; if using os.Args, you should
+// pass 'os.Args[1:]'.
+//
+// The context provided should be your own master context; this allows global
+// shutdown or cancellation to be propagated (provided your command blocks on
+// APIs that support contexts). If no context is available, use
+// context.Background().
+//
 func Run(ctx context.Context, args []string, b Builder) (rerr error) {
 	name := ProgName()
 	return DefaultRunner().Run(ctx, name, args, b)
