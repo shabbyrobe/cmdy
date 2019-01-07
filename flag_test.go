@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 const expectedUsage = `

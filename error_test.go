@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 func TestFormatErrorQuiet(t *testing.T) {

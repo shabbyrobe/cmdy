@@ -5,7 +5,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 func TestOptionalString(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 func TestArgSetOneString(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/args"
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 func TestGroup(t *testing.T) {
