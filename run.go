@@ -125,8 +125,8 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		// doesn't involve string matching.
 		return NewUsageError(err)
 	}
-	remArgs = flagSet.Args()
 
+	remArgs := flagSet.Args()
 	if argSet != nil {
 		if err := argSet.Parse(remArgs); err != nil {
 			return NewUsageError(err)
