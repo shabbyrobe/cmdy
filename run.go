@@ -76,7 +76,6 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 	var (
 		flagSet = cmd.Flags()
 		argSet  = cmd.Args()
-		remArgs = args
 	)
 
 	cctx, ok := ctx.(*commandContext)
