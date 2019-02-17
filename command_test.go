@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/args"
-	"github.com/shabbyrobe/golib/assert"
+	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
 func TestCommand_FlagsArgs(t *testing.T) {
