@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 )
 
 // FIXME: these are Unix codes, but other operating systems use
@@ -90,7 +90,7 @@ func (u *usageError) Error() string {
 	return u.err.Error()
 }
 
-func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *args.ArgSet) {
+func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *arg.ArgSet) {
 	if u.populated {
 		return
 	}

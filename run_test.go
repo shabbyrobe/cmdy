@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
@@ -14,7 +14,7 @@ func TestRun(t *testing.T) {
 		tt := assert.WrapTB(t)
 
 		var foo string
-		as := args.NewArgSet()
+		as := arg.NewArgSet()
 		as.String(&foo, "foo", "usage!")
 
 		tc := &testCmd{args: as}
@@ -90,7 +90,7 @@ func TestRunFullHelp(t *testing.T) {
 
 	// need to configure one argument so we can trip a usage error by omitting it.
 	var foo string
-	as := args.NewArgSet()
+	as := arg.NewArgSet()
 	as.String(&foo, "foo", "usage!")
 
 	tc := &testCmd{args: as, usage: "foo{{if ShowFullHelp}}bar{{end}}"}

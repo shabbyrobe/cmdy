@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 )
 
 var (
@@ -74,9 +74,22 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 	}
 
 	var (
-		flagSet = cmd.Flags()
-		argSet  = cmd.Args()
+		flagSet *FlagSet
+		argSet  *arg.ArgSet
 	)
+	if acmd, ok := cmd.(CommandArgs); ok {
+		argSet = acmd.Args()
+	}
+	if fcmd, ok := cmd.(CommandFlags); ok {
+		flagSet = fcmd.Flags()
+	}
+	if argSet == nil {
+		argSet = arg.NewArgSet()
+	}
+	if flagSet == nil {
+		flagSet = NewFlagSet()
+	}
+	cmd.Configure(flagSet, argSet)
 
 	cctx, ok := ctx.(*commandContext)
 	if !ok {
@@ -159,7 +172,7 @@ func (r *Runner) Fatal(err error) {
 	os.Exit(code)
 }
 
-func (r *Runner) usageTpl(cmd Command, fullHelp bool, path []string, flagSet *FlagSet, argSet *args.ArgSet) (tpl *template.Template, rerr error) {
+func (r *Runner) usageTpl(cmd Command, fullHelp bool, path []string, flagSet *FlagSet, argSet *arg.ArgSet) (tpl *template.Template, rerr error) {
 	// Update the documentation for the Usage interface if you add new functions
 	// to this map:
 	fns := template.FuncMap{

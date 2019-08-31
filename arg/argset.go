@@ -1,4 +1,4 @@
-package args
+package arg
 
 import (
 	"fmt"
@@ -115,10 +115,10 @@ func (a *ArgSet) Parse(input []string) error {
 // of strings pointed to by p. If more args are defined after any Remaining
 // method is called, args will panic.
 //
-//	Use args.AnyLen to allow an arbitrary number of remaining args.
-// 	Use args.Min(2) to require at least 2 args.
-// 	Use args.Max(2) to require at most 2 args.
-// 	Use args.MinMax(1, 3) to require at least 1 arg and at most 3 args.
+//	Use arg.AnyLen to allow an arbitrary number of remaining args.
+// 	Use arg.Min(2) to require at least 2 args.
+// 	Use arg.Max(2) to require at most 2 args.
+// 	Use arg.MinMax(1, 3) to require at least 1 arg and at most 3 args.
 //
 func (a *ArgSet) Remaining(p *[]string, name string, minmax Range, usage string) {
 	a.RemainingVar((*StringList)(p), name, minmax, usage)
@@ -253,7 +253,7 @@ func (a *ArgSet) DurationOptional(p *time.Duration, name string, value time.Dura
 //
 // ArgVal is 100% compatible with the flag.Getter interface from the Go
 // standard library; anything that can be used by flag.FlagSet.Var can be
-// used by args.ArgSet.Var with no modification.
+// used by arg.ArgSet.Var with no modification.
 //
 func (a *ArgSet) Var(val ArgVal, name string, usage string) {
 	dflt := val.String()

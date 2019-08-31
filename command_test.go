@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
@@ -15,7 +15,7 @@ func TestCommand_FlagsArgs(t *testing.T) {
 	var foo, bar string
 	fs := NewFlagSet()
 	fs.StringVar(&foo, "foo", "", "usage...")
-	as := args.NewArgSet()
+	as := arg.NewArgSet()
 	as.String(&bar, "bar", "usage...")
 	c := &testCmd{
 		flags: fs,
@@ -42,7 +42,7 @@ func TestCommand_TemplateDefault(t *testing.T) {
 	tt.MustEqual(127, code)
 
 	// Warning: brittle test
-	tt.MustEqual("synopsis\n\nUsage: cmdy.test [options]\n\nTest", txt)
+	tt.MustEqual("synopsis\n\nUsage: cmdy.test [options] \n\nTest", txt)
 }
 
 type testUsageVarsCmd struct {
@@ -55,16 +55,9 @@ func (t *testUsageVarsCmd) Run(c Context) error { return nil }
 func (t *testUsageVarsCmd) Synopsis() string    { return "usage vars cmd" }
 func (t *testUsageVarsCmd) Usage() string       { return "{{.Stuff}} {{.Flag}} {{.Arg}}" }
 
-func (t *testUsageVarsCmd) Flags() *FlagSet {
-	fs := NewFlagSet()
-	fs.StringVar(&t.Flag, "flag", "", "Var")
-	return fs
-}
-
-func (t *testUsageVarsCmd) Args() *args.ArgSet {
-	as := args.NewArgSet()
-	as.String(&t.Arg, "arg", "Var")
-	return as
+func (t *testUsageVarsCmd) Configure(flags *FlagSet, args *arg.ArgSet) {
+	flags.StringVar(&t.Flag, "flag", "", "Var")
+	args.String(&t.Arg, "arg", "Var")
 }
 
 func TestUsageVars(t *testing.T) {

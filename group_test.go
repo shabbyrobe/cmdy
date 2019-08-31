@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
@@ -38,7 +38,7 @@ func TestGroup_SubcommandArgs(t *testing.T) {
 		return NewGroup("set", Builders{
 			"foo": func() (Command, Init) {
 				p = ""
-				as := args.NewArgSet()
+				as := arg.NewArgSet()
 				as.String(&p, "pants", "Usage...")
 				return &testCmd{args: as}, nil
 			},

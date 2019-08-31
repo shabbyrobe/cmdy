@@ -1,7 +1,7 @@
 package cmdy
 
 import (
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 )
 
 type Command interface {
@@ -9,17 +9,32 @@ type Command interface {
 	// ideally one sentence.
 	Synopsis() string
 
+	Configure(flags *FlagSet, args *arg.ArgSet)
+
+	Run(Context) error
+}
+
+// CommandArgs allows you to override the construction of the ArgSet in your Command. If
+// your command does not implement this, it will receive a fresh instance of arg.ArgSet.
+type CommandArgs interface {
+	Command
+
+	// Args defines positional arguments for your command. If you want to accept
+	// all args, use github.com/shabbyrobe/cmdy/arg.All(). If no ArgSet is
+	// returned, any arguments will cause an error.
+	Args() *arg.ArgSet
+}
+
+// CommandFlags allows you to override the construction of the FlagSet in your Command.
+// If your command does not implement this, it will receive a fresh instance of
+// cmdy.FlagSet.
+type CommandFlags interface {
+	Command
+
 	// Flag definitions for your command. May return nil. If no FlagSet is
 	// returned, --help is still supported but all other flags will cause an
 	// error.
 	Flags() *FlagSet
-
-	// Args defines positional arguments for your command. If you want to accept
-	// all args, use github.com/shabbyrobe/cmdy/args.All(). If no ArgSet is
-	// returned, any arguments will cause an error.
-	Args() *args.ArgSet
-
-	Run(Context) error
 }
 
 /*

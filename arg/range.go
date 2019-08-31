@@ -1,4 +1,4 @@
-package args
+package arg
 
 // Unlimited is a sentinel value used for the Max of a Range to indicate that
 // it is unbounded.
@@ -11,7 +11,7 @@ const Unlimited = -1
 // AnyLen is used for a Remaining arg that can take 0 or more arguments.
 //
 //	var strs []string
-//	argSet.Remaining(&strs, "strs", args.AnyLen, "All remaining string arguments")
+//	argSet.Remaining(&strs, "strs", arg.AnyLen, "All remaining string arguments")
 //
 var AnyLen = Range{0, Unlimited}
 
@@ -28,7 +28,7 @@ type Range struct {
 // In the following example, the args will pass validation if there are 2
 // or more:
 //
-//	argSet.Remaining(&strs, "strs", args.Min(2), "Remaining strings")
+//	argSet.Remaining(&strs, "strs", arg.Min(2), "Remaining strings")
 //
 //	$ myprog            // invalid
 //	$ myprog a          // invalid
@@ -43,7 +43,7 @@ func Min(min int) Range { return Range{min, Unlimited} }
 // In the following example, the args will pass validation if there are 2
 // or fewer:
 //
-//	argSet.Remaining(&strs, "strs", args.Max(2), "Remaining strings")
+//	argSet.Remaining(&strs, "strs", arg.Max(2), "Remaining strings")
 //
 //	$ myprog            // valid
 //	$ myprog a          // valid
@@ -58,7 +58,7 @@ func Max(max int) Range { return Range{0, max} }
 // In the following example, the args will pass validation if there are
 // between 2 and 4 args inclusive:
 //
-//	argSet.Remaining(&strs, "strs", args.MinMax(2, 4), "Remaining strings")
+//	argSet.Remaining(&strs, "strs", arg.MinMax(2, 4), "Remaining strings")
 //
 //	$ myprog a          // invalid
 //	$ myprog a b        // valid

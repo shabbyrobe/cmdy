@@ -3,15 +3,16 @@ package cmdy
 import (
 	"bytes"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 )
 
 type testCmd struct {
-	synopsis string
-	usage    string
-	flags    *FlagSet
-	args     *args.ArgSet
-	run      func(c Context) error
+	synopsis  string
+	usage     string
+	flags     *FlagSet
+	args      *arg.ArgSet
+	configure func(flags *FlagSet, args *arg.ArgSet)
+	run       func(c Context) error
 }
 
 func testCmdRunBuilder(r func(c Context) error) func() (Command, Init) {
@@ -30,10 +31,16 @@ func testInitBuilder(c Command, init Init) func() (Command, Init) {
 	return func() (Command, Init) { return c, init }
 }
 
-func (t *testCmd) Synopsis() string   { return t.synopsis }
-func (t *testCmd) Usage() string      { return t.usage }
-func (t *testCmd) Flags() *FlagSet    { return t.flags }
-func (t *testCmd) Args() *args.ArgSet { return t.args }
+func (t *testCmd) Synopsis() string  { return t.synopsis }
+func (t *testCmd) Usage() string     { return t.usage }
+func (t *testCmd) Flags() *FlagSet   { return t.flags }
+func (t *testCmd) Args() *arg.ArgSet { return t.args }
+
+func (t *testCmd) Configure(flags *FlagSet, args *arg.ArgSet) {
+	if t.configure != nil {
+		t.configure(flags, args)
+	}
+}
 
 func (t *testCmd) Run(c Context) error {
 	if t.run != nil {

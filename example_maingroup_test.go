@@ -5,14 +5,14 @@ import (
 	"fmt"
 
 	"github.com/shabbyrobe/cmdy"
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 )
 
 type mainGroupCommand struct{}
 
-func (cmd *mainGroupCommand) Synopsis() string     { return "Example main group command" }
-func (cmd *mainGroupCommand) Flags() *cmdy.FlagSet { return nil }
-func (cmd *mainGroupCommand) Args() *args.ArgSet   { return nil }
+func (cmd *mainGroupCommand) Synopsis() string { return "Example main group command" }
+
+func (cmd *mainGroupCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {}
 
 func (cmd *mainGroupCommand) Run(ctx cmdy.Context) error {
 	fmt.Fprintf(ctx.Stdout(), "subcommand!\n")

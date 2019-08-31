@@ -19,7 +19,7 @@ Features
 --------
 
 - `ArgSet`, similar to `flag.FlagSet` but for positional arguments. The
-  `github.com/shabbyrobe/cmdy/args` package can be used independently.
+  `github.com/shabbyrobe/cmdy/arg` package can be used independently.
 - Simple subcommand (and sub-sub command (and sub-sub-sub command)) support.
 - `context.Context` support (via `cmdy.Context`, which is also a
   `context.Context`).
@@ -52,10 +52,10 @@ func (t *myCommand) Flags() *cmdy.FlagSet {
 	return fs
 }
 
-func (t *myCommand) Args() *args.ArgSet {
-	as := args.NewArgSet()
+func (t *myCommand) Args() *arg.ArgSet {
+	as := arg.NewArgSet()
 	as.String(&t.testArg, "test", "Test arg")
-	as.Remaining(&t.rem, "things", args.AnyLen, "Any number of extra string arguments.")
+	as.Remaining(&t.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
 	return as
 }
 

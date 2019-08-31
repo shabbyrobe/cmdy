@@ -1,4 +1,4 @@
-package args
+package arg
 
 // All provides an ArgSet that collects all of the arguments into
 // a slice of strings.

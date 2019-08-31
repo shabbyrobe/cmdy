@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/shabbyrobe/cmdy/args"
+	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/usage"
 )
 
@@ -166,12 +166,10 @@ func (cs *Group) Flags() *FlagSet {
 	return nil
 }
 
-func (cs *Group) Args() *args.ArgSet {
-	as := args.NewArgSet()
-	as.HideUsage()
-	as.StringOptional(&cs.subcommand, "cmd", "", "Subcommand name")
-	as.Remaining(&cs.subcommandArgs, "args", args.AnyLen, "Subcommand arguments")
-	return as
+func (cs *Group) Configure(flags *FlagSet, args *arg.ArgSet) {
+	args.HideUsage()
+	args.StringOptional(&cs.subcommand, "cmd", "", "Subcommand name")
+	args.Remaining(&cs.subcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
 }
 
 func (cs *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
