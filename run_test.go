@@ -18,7 +18,7 @@ func TestRun(t *testing.T) {
 		as.String(&foo, "foo", "usage!")
 
 		tc := &testCmd{args: as}
-		bld := func() (Command, Init) { return tc, nil }
+		bld := func() Command { return tc }
 		rn := newTestRunner()
 
 		// missing argument should produce a usage error:
@@ -52,7 +52,7 @@ func TestRun(t *testing.T) {
 		fs.StringVar(&foo, "foo", "", "usage!")
 
 		tc := &testCmd{flags: fs}
-		bld := func() (Command, Init) { return tc, nil }
+		bld := func() Command { return tc }
 		rn := newTestRunner()
 
 		// no arguments, no flags, no worries:
@@ -94,7 +94,7 @@ func TestRunFullHelp(t *testing.T) {
 	as.String(&foo, "foo", "usage!")
 
 	tc := &testCmd{args: as, usage: "foo{{if ShowFullHelp}}bar{{end}}"}
-	bld := func() (Command, Init) { return tc, nil }
+	bld := func() Command { return tc }
 	rn := newTestRunner()
 
 	{ // --help should ShowFullHelp
@@ -105,7 +105,7 @@ func TestRunFullHelp(t *testing.T) {
 		tt.MustEqual(ExitUsage, code)
 	}
 
-	{ // UsageError should not ShowFullHelp
+	{ // usageError should not ShowFullHelp
 		err := rn.Run(context.Background(), "test", []string{}, bld)
 		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
 		msg, code := FormatError(err)

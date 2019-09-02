@@ -66,13 +66,7 @@ func NewStandardRunner() *Runner {
 // to Runner.Fatal(), not log.Fatal(), if you want nice errors and usage printed.
 //
 func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
-	cmd, init := b()
-	if init != nil {
-		if err := init(); err != nil {
-			return err
-		}
-	}
-
+	cmd := b()
 	var (
 		flagSet *FlagSet
 		argSet  *arg.ArgSet
@@ -122,31 +116,27 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		}
 	}()
 
-	if flagSet == nil {
-		flagSet = NewFlagSet() // handles --help by default, save ourselves the trouble
-	}
-
 	if err := flagSet.Parse(args); err != nil {
 		if err == flag.ErrHelp {
 			// suppress "flag: help requested"
-			return NewHelpRequest()
+			return HelpRequest()
 		}
 
 		// As at Go 1.11, the only error returned by the flag package that we
 		// might not consider a usage error is the one where you define your
 		// flag with a '-' in the name, but there's no way to identify it that
 		// doesn't involve string matching.
-		return NewUsageError(err)
+		return UsageError(err)
 	}
 
 	remArgs := flagSet.Args()
 	if argSet != nil {
 		if err := argSet.Parse(remArgs); err != nil {
-			return NewUsageError(err)
+			return UsageError(err)
 		}
 
 	} else if len(remArgs) > 0 {
-		return NewUsageError(fmt.Errorf("expected 0 arguments, found %d", len(remArgs)))
+		return UsageError(fmt.Errorf("expected 0 arguments, found %d", len(remArgs)))
 	}
 
 	return cmd.Run(cctx)

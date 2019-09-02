@@ -32,31 +32,22 @@ Usage
 Subcommands are easy to create; you need a builder and a command:
 
 ```go
-func myCommandBuilder() (cmdy.Command, cmdy.Init) {
-	return &myCommand{}, nil
-}
-
 type myCommand struct {
 	testFlag string
 	testArg  string
 	rem      []string
 }
 
-var _ cmdy.Command = &myCommand{}
+func newMyCommand() cmdy.Command {
+	return &myCommand{}
+}
 
 func (t *myCommand) Synopsis() string { return "My command is a command that does stuff" }
 
-func (t *myCommand) Flags() *cmdy.FlagSet {
-	fs := cmdy.NewFlagSet()
-	fs.StringVar(&t.testFlag, "test", "", "Test flag")
-	return fs
-}
-
-func (t *myCommand) Args() *arg.ArgSet {
-	as := arg.NewArgSet()
-	as.String(&t.testArg, "test", "Test arg")
-	as.Remaining(&t.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
-	return as
+func (t *myCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {
+	flags.StringVar(&t.testFlag, "test", "", "Test flag")
+	args.String(&t.testArg, "test", "Test arg")
+	args.Remaining(&t.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
 }
 
 func (t *myCommand) Run(ctx cmdy.Context) error {
@@ -71,8 +62,8 @@ func main() {
 }
 
 func run() error {
-	bld := func() (cmdy.Command, cmdy.Init) {
-		nestedGroupBuilder := func() (cmdy.Command, cmdy.Init) {
+	bld := func() cmdy.Command {
+		nestedGroupBuilder := func() cmdy.Command {
 			return cmdy.NewGroup(
 				"Nested group",
 				cmdy.Builders{
@@ -87,25 +78,9 @@ func run() error {
 				"cmd": myCommandBuilder,
 				"nest": nestedGroupBuilder,
 			},
-		), nil
+		)
 	}
 	return cmdy.Run(context.Background(), os.Args[1:], bld)
-}
-```
-
-Builders can supply an optional initialisation function which wires up any
-dependencies which are expensive to create. This will not be called when
-``--help`` is requested::
-
-```
-func myCommandBuilder() (cmdy.Command, cmdy.Init) {
-	cmd := &myCommand{
-        CheapDependency: "foo",
-    }
-    return cmd, func() (err error) {
-        cmd.ExpensiveDependency, err = getExpensiveDependency()
-        return err
-    }
 }
 ```
 

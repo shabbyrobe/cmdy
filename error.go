@@ -46,21 +46,21 @@ func ErrWithCode(code int, err error) error {
 	return &exitError{err: err, code: code}
 }
 
-// NewUsageError wraps an existing error so that cmdy.Fatal() will print the full
+// UsageError wraps an existing error so that cmdy.Fatal() will print the full
 // command usage above the error message.
-func NewUsageError(err error) error {
+func UsageError(err error) error {
 	return &usageError{err: err}
 }
 
-// NewHelpRequest wraps an existing error so that cmdy.Fatal() will print the full
+// HelpRequest wraps an existing error so that cmdy.Fatal() will print the full
 // command help.
-func NewHelpRequest() error {
+func HelpRequest() error {
 	return &usageError{help: true}
 }
 
-// NewUsageError formats an error message so that cmdy.Fatal() will print the full
+// UsageErrorf formats an error message so that cmdy.Fatal() will print the full
 // command usage above it.
-func NewUsageErrorf(msg string, args ...interface{}) error {
+func UsageErrorf(msg string, args ...interface{}) error {
 	return &usageError{err: fmt.Errorf(msg, args...)}
 }
 

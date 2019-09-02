@@ -12,23 +12,17 @@ type testCmd struct {
 	flags     *FlagSet
 	args      *arg.ArgSet
 	configure func(flags *FlagSet, args *arg.ArgSet)
-	run       func(c Context) error
+
+	err error // Takes precedence over 'run'
+	run func(c Context) error
 }
 
-func testCmdRunBuilder(r func(c Context) error) func() (Command, Init) {
-	return func() (Command, Init) { return &testCmd{run: r}, nil }
+func testCmdRunBuilder(r func(c Context) error) func() Command {
+	return func() Command { return &testCmd{run: r} }
 }
 
-func testCmdRunInitBuilder(r func(c Context) error, init Init) func() (Command, Init) {
-	return func() (Command, Init) { return &testCmd{run: r}, init }
-}
-
-func testBuilder(c Command) func() (Command, Init) {
-	return func() (Command, Init) { return c, nil }
-}
-
-func testInitBuilder(c Command, init Init) func() (Command, Init) {
-	return func() (Command, Init) { return c, init }
+func testBuilder(c Command) func() Command {
+	return func() Command { return c }
 }
 
 func (t *testCmd) Synopsis() string  { return t.synopsis }
@@ -43,6 +37,9 @@ func (t *testCmd) Configure(flags *FlagSet, args *arg.ArgSet) {
 }
 
 func (t *testCmd) Run(c Context) error {
+	if t.err != nil {
+		return t.err
+	}
 	if t.run != nil {
 		return t.run(c)
 	}

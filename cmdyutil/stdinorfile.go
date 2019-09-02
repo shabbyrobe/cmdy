@@ -31,7 +31,7 @@ func OpenStdinOrFile(ctx cmdy.Context, fileName string) (rdr io.ReadCloser, err 
 	}
 
 	if hasInput {
-		return dummyReadCloser{input}, nil
+		return ioutil.NopCloser(input), nil
 	} else {
 		return os.Open(fileName)
 	}
@@ -56,9 +56,3 @@ var (
 	errStdinOrFileBoth    = fmt.Errorf("received file name and STDIN pipe, must be one or the other")
 	errStdinOrFileNeither = fmt.Errorf("received neither file name nor STDIN pipe, must be one or the other")
 )
-
-type dummyReadCloser struct {
-	io.Reader
-}
-
-func (d dummyReadCloser) Close() error { return nil }

@@ -26,9 +26,7 @@ func TestMatcher(t *testing.T) {
 			tt := assert.WrapTB(t)
 			bldrs := Builders{}
 			for _, name := range c.options {
-				bldrs[name] = func() (Command, Init) {
-					return &testCmd{}, nil
-				}
+				bldrs[name] = func() Command { return &testCmd{} }
 			}
 			grp := NewGroup("g", bldrs, GroupPrefixMatcher(c.min))
 			_, name, err := grp.Builder(c.in)

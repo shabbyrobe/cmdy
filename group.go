@@ -151,7 +151,7 @@ func (cs *Group) Usage() string {
 	}
 
 	for _, l := range names {
-		s, _ := cs.Builders[l]()
+		s := cs.Builders[l]()
 		syn := s.Synopsis()
 		syn = usage.Wrap(syn, string(indent), 0)
 		out += fmt.Sprintf("    %-*s  %s\n", width, l, syn)
@@ -191,9 +191,9 @@ func (cs *Group) Run(ctx Context) error {
 		if cs.Unknown != nil {
 			bld = cs.Unknown
 		} else if cs.subcommand != "" {
-			return NewUsageError(fmt.Errorf("unknown command %q", cs.subcommand))
+			return UsageError(fmt.Errorf("unknown command %q", cs.subcommand))
 		} else {
-			return NewUsageError(nil)
+			return UsageError(nil)
 		}
 	}
 

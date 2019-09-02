@@ -71,11 +71,10 @@ If your Command does not implement cmdy.Usage, cmdy.DefaultUsage is used.
 
 Your Command instance is used as the 'data' argument to Template.Execute(),
 so any exported fields from your command can be used in the template like
-so: "{{.MyCommandField}}". The Command used as the template data will NOT
-have had its Init() function called, if one was returned by your Builder.
+so: "{{.MyCommandField}}".
 
 If a Command intends cmdy to print the usage in response to an error,
-cmdy.NewUsageError or cmdy.NewUsageErrorf should be returned from Command.Run().
+cmdy.UsageError or cmdy.UsageErrorf should be returned from Command.Run().
 
 To obtain an actual usage string from a usage error, use cmdy.Format(err).
 */
@@ -94,38 +93,25 @@ type UsageCommand interface {
 }
 
 /*
-Builder creates an instance of your Command and returns an optional Init
-function used to populate expensive dependencies. The instance returned
-in the first return should be a new instance, not a recycled instance, and
-should only contain static dependency values that are cheap to create:
+Builder creates an instance of your Command. The instance returned should be a new
+instance, not a recycled instance, and should only contain static dependency values that
+are cheap to create:
 
-	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
-		return &MyCommand{}, nil
+	var goodBuilder = func() cmdy.Command {
+		return &MyCommand{}
 	}
-	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
-		return &MyCommand{SimpleDep: "hello"}, nil
+	var goodBuilder = func() cmdy.Command {
+		return &MyCommand{SimpleDep: "hello"}
 	}
-	var goodBuilder = func() (cmdy.Command, cmdy.Init) {
-		cmd := &MyCommand{SimpleDep: "hello"}
-		return cmd, func() error {
-			cmd.ExpensiveDep = acquireExpensiveDependency()
-			return nil
-		}
-	}
-	var badBuilder = func() (cmdy.Command, cmdy.Init) {
-		cmd := &MyCommand{
-			SimpleDep:    "nope",
-			ExpensiveDep: acquireExpensiveDependency(),
-		}
-		return cmd, nil
+	var badBuilder = func() cmdy.Command {
+		body, _ := http.Get("http://example.com")
+		return &MyCommand{Stuff: body}
 	}
 
-The reason for this design decision is a desire to avoid using a separate
-struct for the help messages. cmdy will always call your builder to get the
-Usage, so you don't want to create expensive dependencies in that situation.
+	cmd := &MyCommand{}
+	var badBuilder = func() cmdy.Command {
+		return cmd
+	}
+
 */
-type Builder func() (Command, Init)
-
-// Init is used to wire expensive-to-construct dependencies into an instance of
-// a Command.
-type Init func() error
+type Builder func() Command

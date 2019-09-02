@@ -24,7 +24,7 @@ func Example_maingroup() {
 	cmdy.Reset()
 
 	// builders allow multiple instances of the command to be created.
-	mainBuilder := func() (cmdy.Command, cmdy.Init) {
+	mainBuilder := func() cmdy.Command {
 		// flag values should be scoped to the builder:
 		var testFlag bool
 
@@ -33,7 +33,7 @@ func Example_maingroup() {
 			cmdy.Builders{
 				// Add your subcommand builders here. This has the same signature as
 				// mainBuilder - you can nest cmdy.Groups arbitrarily.
-				"mycmd": func() (cmdy.Command, cmdy.Init) { return &mainGroupCommand{}, nil },
+				"mycmd": func() cmdy.Command { return &mainGroupCommand{} },
 			},
 
 			// Optionally override the default usage:
@@ -63,7 +63,7 @@ func Example_maingroup() {
 				// swallow the error.
 				return err
 			}),
-		), nil
+		)
 	}
 
 	args := []string{"-testflag", "mycmd"}

@@ -15,7 +15,7 @@ func TestGroup(t *testing.T) {
 
 	var foo, bar = errors.New("foo"), errors.New("bar")
 
-	bldr := func() (Command, Init) {
+	bldr := func() Command {
 		return NewGroup("set", Builders{
 			"foo": testCmdRunBuilder(func(c Context) error {
 				return foo
@@ -23,7 +23,7 @@ func TestGroup(t *testing.T) {
 			"bar": testCmdRunBuilder(func(c Context) error {
 				return bar
 			}),
-		}), nil
+		})
 	}
 
 	tt.MustEqual(foo, Run(context.Background(), []string{"foo"}, bldr))
@@ -34,15 +34,15 @@ func TestGroup_SubcommandArgs(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
-	bldr := func() (Command, Init) {
+	bldr := func() Command {
 		return NewGroup("set", Builders{
-			"foo": func() (Command, Init) {
+			"foo": func() Command {
 				p = ""
 				as := arg.NewArgSet()
 				as.String(&p, "pants", "Usage...")
-				return &testCmd{args: as}, nil
+				return &testCmd{args: as}
 			},
-		}), nil
+		})
 	}
 
 	tt.MustOK(Run(context.Background(), []string{"foo", "yep"}, bldr))
@@ -59,14 +59,14 @@ func TestGroup_SubcommandFlags(t *testing.T) {
 	tt := assert.WrapTB(t)
 
 	var p string
-	bldr := func() (Command, Init) {
+	bldr := func() Command {
 		return NewGroup("set", Builders{
-			"foo": func() (Command, Init) {
+			"foo": func() Command {
 				fs := NewFlagSet()
 				fs.StringVar(&p, "pants", "", "Usage...")
-				return &testCmd{flags: fs}, nil
+				return &testCmd{flags: fs}
 			},
-		}), nil
+		})
 	}
 
 	tt.MustOK(Run(context.Background(), []string{"foo", "-pants", "yep"}, bldr))
@@ -81,12 +81,12 @@ func TestGroup_Unknown(t *testing.T) {
 
 	var foo = errors.New("foo")
 
-	bldr := func() (Command, Init) {
+	bldr := func() Command {
 		return NewGroup("set", Builders{},
-			GroupUnknown(func() (Command, Init) {
-				return nil, func() error { return foo }
+			GroupUnknown(func() Command {
+				return &testCmd{err: foo}
 			}),
-		), nil
+		)
 	}
 
 	tt.MustEqual(foo, Run(context.Background(), []string{"foo"}, bldr))
@@ -98,10 +98,10 @@ func TestGroup_Hide(t *testing.T) {
 
 	grp := NewGroup("set",
 		Builders{
-			"4GKwDcbp": func() (Command, Init) { return &testCmd{synopsis: "4GKwDcbp"}, nil },
-			"9rdjKX3j": func() (Command, Init) { return &testCmd{synopsis: "9rdjKX3j"}, nil },
-			"GM68tb0F": func() (Command, Init) { return &testCmd{synopsis: "GM68tb0F"}, nil },
-			"OZJpKePU": func() (Command, Init) { return &testCmd{synopsis: "OZJpKePU"}, nil },
+			"4GKwDcbp": func() Command { return &testCmd{synopsis: "4GKwDcbp"} },
+			"9rdjKX3j": func() Command { return &testCmd{synopsis: "9rdjKX3j"} },
+			"GM68tb0F": func() Command { return &testCmd{synopsis: "GM68tb0F"} },
+			"OZJpKePU": func() Command { return &testCmd{synopsis: "OZJpKePU"} },
 		},
 		GroupHide("9rdjKX3j", "OZJpKePU"),
 	)
