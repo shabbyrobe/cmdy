@@ -2,13 +2,18 @@ package cmdy
 
 import (
 	"io"
-	"os"
+
+	"github.com/shabbyrobe/cmdy/internal/istty"
 )
 
 // ReaderIsPipe probably returns true if the input is receiving piped data
 // from another program, rather than from a terminal.
 //
-// This may not work on Windows.
+// This is known to work in the following environments:
+//
+// - Bash on macOS and Linux
+// - Command Prompt on Windows
+// - Windows Powershell
 //
 // Typical usage:
 //
@@ -21,13 +26,17 @@ import (
 //	}
 //
 func ReaderIsPipe(in io.Reader) bool {
-	return isPipe(in)
+	return istty.CheckTTY(in) == istty.IsPipe
 }
 
 // WriterIsPipe probably returns true if the Writer represents a pipe to
 // another program, rather than to a terminal.
 //
-// This may not work on Windows.
+// This is known to work in the following environments:
+//
+// - Bash on macOS and Linux
+// - Command Prompt on Windows
+// - Windows Powershell
 //
 // Typical usage:
 //
@@ -40,18 +49,5 @@ func ReaderIsPipe(in io.Reader) bool {
 //	}
 //
 func WriterIsPipe(out io.Writer) bool {
-	return isPipe(out)
-}
-
-func isPipe(v interface{}) bool {
-	if v == nil {
-		return false
-	}
-	type pipe interface{ Stat() (os.FileInfo, error) }
-	if pv, ok := v.(pipe); ok {
-		fi, _ := pv.Stat()
-		return (fi.Mode() & os.ModeCharDevice) == 0
-	} else {
-		return false
-	}
+	return istty.CheckTTY(out) == istty.IsPipe
 }
