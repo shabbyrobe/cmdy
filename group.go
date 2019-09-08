@@ -11,8 +11,11 @@ import (
 
 type Builders map[string]Builder
 
-// Matcher allows you to specify a function for resolving a builder
-// from a list of builders when using a Group.
+// Matcher allows you to specify a function for resolving a builder from a list of
+// builders when using a Group.
+//
+// You could use this API to implement short aliases for existing commands too, if
+// you so desired (i.e. "hg co" -> "hg checkout").
 //
 // See GroupMatcher, GroupPrefixMatcher and PrefixMatcher.
 //

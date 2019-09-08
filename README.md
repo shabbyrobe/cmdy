@@ -29,28 +29,30 @@ Features
 Usage
 -----
 
-Subcommands are easy to create; you need a builder and a command:
+Subcommands are easy to create; you need a builder and one or more
+implementations of cmdy.Command. This fairly contrived example demonstrates
+the basics:
 
 ```go
-type myCommand struct {
+type demoCommand struct {
 	testFlag string
 	testArg  string
 	rem      []string
 }
 
-func newMyCommand() cmdy.Command {
-	return &myCommand{}
+func newDemoCommand() cmdy.Command {
+	return &demoCommand{}
 }
 
-func (t *myCommand) Synopsis() string { return "My command is a command that does stuff" }
+func (t *demoCommand) Synopsis() string { return "My command is a command that does stuff" }
 
-func (t *myCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {
+func (t *demoCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {
 	flags.StringVar(&t.testFlag, "test", "", "Test flag")
 	args.String(&t.testArg, "test", "Test arg")
 	args.Remaining(&t.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
 }
 
-func (t *myCommand) Run(ctx cmdy.Context) error {
+func (t *demoCommand) Run(ctx cmdy.Context) error {
 	fmt.Println(t.testFlag, t.testArg, t.rem)
 	return nil
 }
@@ -62,25 +64,23 @@ func main() {
 }
 
 func run() error {
-	bld := func() cmdy.Command {
-		nestedGroupBuilder := func() cmdy.Command {
-			return cmdy.NewGroup(
-				"Nested group",
-				cmdy.Builders{
-					"subcmd": myCommandBuilder,
-				},
-			)
-		}
+	nestedGroupBuilder := func() cmdy.Command {
+		return cmdy.NewGroup(
+			"Nested group",
+			cmdy.Builders{"subcmd": newDemoCommand},
+		)
+	}
 
+	mainGroupBuilder := func() cmdy.Command {
 		return cmdy.NewGroup(
 			"My command group",
 			cmdy.Builders{
-				"cmd": myCommandBuilder,
+				"cmd":  newDemoCommand,
 				"nest": nestedGroupBuilder,
 			},
 		)
 	}
-	return cmdy.Run(context.Background(), os.Args[1:], bld)
+	return cmdy.Run(context.Background(), os.Args[1:], mainGroupBuilder)
 }
 ```
 

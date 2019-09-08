@@ -4,9 +4,8 @@ import (
 	"sort"
 )
 
-// PrefixMatcher returns a primitive Matcher for use with a command Group that
-// will match a command if the input is an unambiguous prefix of one of the
-// Group's Builders.
+// PrefixMatcher returns a simple Matcher for use with a command Group that will match a
+// command if the input is an unambiguous prefix of one of the Group's Builders.
 //
 //	grp := NewGroup("grp", Builders{
 //		"foo":  fooBuilder,
@@ -37,27 +36,25 @@ func PrefixMatcher(group *Group, minLen int) Matcher {
 
 	return func(bldrs Builders, in string) (bld Builder, name string, rerr error) {
 		max := 0
-		ilen := len(in)
+		inlen := len(in)
 		for _, str := range strs {
 			var cur int
-			var slen = len(str)
-			if ilen > slen {
+			var curlen = len(str)
+			if inlen > curlen {
 				continue
 			} else if str == in {
 				return group.Builders[str], str, nil
 			}
 
-			for i := 0; i < slen; i++ {
-				if i >= ilen || str[i] != in[i] {
+			for i := 0; i < curlen; i++ {
+				if i >= inlen || str[i] != in[i] {
 					break
 				}
 				cur++
 			}
 
 			if cur > 0 && cur >= minLen {
-				if cur < max || cur < ilen {
-					return bld, name, nil
-				} else if cur == max {
+				if cur == max {
 					return nil, "", nil
 				} else if cur > max {
 					max = cur

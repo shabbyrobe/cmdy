@@ -10,6 +10,10 @@ import (
 
 type mainGroupCommand struct{}
 
+func newMainGroupCommand() cmdy.Command {
+	return &mainGroupCommand{}
+}
+
 func (cmd *mainGroupCommand) Synopsis() string { return "Example main group command" }
 
 func (cmd *mainGroupCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {}
@@ -33,7 +37,7 @@ func Example_maingroup() {
 			cmdy.Builders{
 				// Add your subcommand builders here. This has the same signature as
 				// mainBuilder - you can nest cmdy.Groups arbitrarily.
-				"mycmd": func() cmdy.Command { return &mainGroupCommand{} },
+				"mycmd": newMainGroupCommand,
 			},
 
 			// Optionally override the default usage:
