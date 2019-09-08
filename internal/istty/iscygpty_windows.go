@@ -3,6 +3,7 @@
 package istty
 
 import (
+	"regexp"
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
@@ -48,12 +49,11 @@ func getPipeName(fd uintptr) string {
 	return string(utf16.Decode(buf[2 : 2+l/2]))
 }
 
-var ptn = re.MustCompile(`^\\(?:cygwin|msys)-[0-9a-f]{16}-pty[0-9]+-(?:from|to)-master$`)
+var ptn = regexp.MustCompile(`^\\(?:cygwin|msys)-[0-9a-f]{16}-pty[0-9]+-(?:from|to)-master$`)
 
 // IsCygwinPty returns true if the file descriptor is a Cygwin/MSYS pty.
 // Only works on Vista or later. (Always returns false on XP or earlier.)
 func IsCygwinPty(fd uintptr) bool {
 	s := getPipeName(fd)
-	matched, _ := ptn.MatchString(s)
-	return matched
+	return ptn.MatchString(s)
 }
