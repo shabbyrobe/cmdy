@@ -48,7 +48,9 @@ func CheckTTY(v interface{}) TTYState {
 	if runtime.GOOS == "windows" {
 		if fdv, ok := v.(*os.File); ok {
 			fd := fdv.Fd()
-			IsCygwinPty(fd)
+			if IsCygwinPty(fd) {
+				return IsTTY
+			}
 		}
 	}
 
