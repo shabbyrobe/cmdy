@@ -1,4 +1,4 @@
-package cmdy
+package cmdyutil
 
 import (
 	"io"

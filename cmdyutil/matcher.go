@@ -1,8 +1,14 @@
-package cmdy
+package cmdyutil
 
 import (
 	"sort"
+
+	"github.com/shabbyrobe/cmdy"
 )
+
+func GroupPrefixMatcher(minLen int) cmdy.GroupOption {
+	return func(cs *cmdy.Group) { cs.Matcher = PrefixMatcher(cs, minLen) }
+}
 
 // PrefixMatcher returns a simple Matcher for use with a command Group that will match a
 // command if the input is an unambiguous prefix of one of the Group's Builders.
@@ -23,7 +29,7 @@ import (
 //	$ myprog grp bark // barkBuilder
 //	$ myprog grp b    // NOPE; too short
 //
-func PrefixMatcher(group *Group, minLen int) Matcher {
+func PrefixMatcher(group *cmdy.Group, minLen int) cmdy.Matcher {
 	if minLen <= 0 {
 		panic("minLen must be > 0")
 	}
@@ -34,7 +40,7 @@ func PrefixMatcher(group *Group, minLen int) Matcher {
 	}
 	sort.Strings(strs)
 
-	return func(bldrs Builders, in string) (bld Builder, name string, rerr error) {
+	return func(bldrs cmdy.Builders, in string) (bld cmdy.Builder, name string, rerr error) {
 		max := 0
 		inlen := len(in)
 		for _, str := range strs {

@@ -3,51 +3,12 @@ package cmdy
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/internal/assert"
 )
-
-func strOutputBuilder(out string) func() Command {
-	return testCmdRunBuilder(func(ctx Context) error {
-		fmt.Println(out)
-		return nil
-	})
-}
-
-var (
-	newFooCommand  = strOutputBuilder("foo")
-	newFoodCommand = strOutputBuilder("food")
-	newBaleCommand = strOutputBuilder("bale")
-	newBarkCommand = strOutputBuilder("bark")
-)
-
-func ExampleGroup_PrefixMatcher() {
-	builders := Builders{
-		"foo":  newFooCommand,
-		"food": newFoodCommand,
-		"bale": newBaleCommand,
-		"bark": newBarkCommand,
-	}
-
-	bldr := func() Command {
-		return NewGroup("group", builders, GroupPrefixMatcher(2))
-	}
-
-	Run(context.Background(), []string{"foo"}, bldr)
-	Run(context.Background(), []string{"food"}, bldr)
-	Run(context.Background(), []string{"bar"}, bldr)
-	Run(context.Background(), []string{"bal"}, bldr)
-
-	// Output:
-	// foo
-	// food
-	// bark
-	// bale
-}
 
 func TestGroup(t *testing.T) {
 	tt := assert.WrapTB(t)

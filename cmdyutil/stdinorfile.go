@@ -21,7 +21,7 @@ func OpenStdinOrFile(ctx cmdy.Context, fileName string) (rdr io.ReadCloser, err 
 	if buf, ok := input.(*bytes.Buffer); ok {
 		hasInput = buf.Len() > 0
 	} else {
-		hasInput = cmdy.ReaderIsPipe(input)
+		hasInput = ReaderIsPipe(input)
 	}
 
 	if hasInput && fileName != "" {

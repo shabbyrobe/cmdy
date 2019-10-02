@@ -34,6 +34,9 @@ const (
 //  win/gitbash     -prw-rw-rw-  -prw-rw-rw-  -prw-rw-rw-  -prw-rw-rw-
 //  win/cygwin      -prw-rw-rw-  -prw-rw-rw-  -prw-rw-rw-  -prw-rw-rw-
 //
+// In the end I vendored in much of the liberally licesed "go-iscygpty"
+// by K. Takata. This appears to work on all the above combinations.
+//
 // More info:
 //
 //	- https://rosettacode.org/wiki/Check_output_device_is_a_terminal

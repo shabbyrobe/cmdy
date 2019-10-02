@@ -31,10 +31,6 @@ func GroupUnknown(b Builder) GroupOption { return func(cs *Group) { cs.Unknown =
 
 func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
 
-func GroupPrefixMatcher(minLen int) GroupOption {
-	return func(cs *Group) { cs.Matcher = PrefixMatcher(cs, minLen) }
-}
-
 // GroupUsage provides the usage template to the Group.
 // The result of this function may be cached.
 func GroupUsage(usage string) GroupOption { return func(cs *Group) { cs.usage = usage } }
