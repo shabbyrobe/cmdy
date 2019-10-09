@@ -25,7 +25,7 @@ var (
 	newBarkCommand = strOutputBuilder("bark")
 )
 
-func ExampleGroup_PrefixMatcher() {
+func ExampleGroup_prefixMatcher() {
 	builders := Builders{
 		"foo":  newFooCommand,
 		"food": newFoodCommand,
@@ -115,15 +115,17 @@ func TestGroup_SubcommandFlags(t *testing.T) {
 	tt.MustAssert(err != nil) // FIXME: check error
 }
 
-func TestGroup_Unknown(t *testing.T) {
+func TestGroup_Rewriter(t *testing.T) {
 	tt := assert.WrapTB(t)
-
 	var foo = errors.New("foo")
 
 	bldr := func() Command {
 		return NewGroup("set", Builders{},
-			GroupUnknown(func() Command {
-				return &testCmd{err: foo}
+			GroupRewrite(func(g *Group, state GroupRunState) *GroupRunState {
+				state.Builder = testCmdRunBuilder(func(c Context) error {
+					return foo
+				})
+				return &state
 			}),
 		)
 	}

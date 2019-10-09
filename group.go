@@ -25,9 +25,9 @@ type Matcher func(bldrs Builders, in string) (bld Builder, name string, rerr err
 
 type GroupOption func(cs *Group)
 
-// GroupUnknown provides a Builder to use when the first argument to the Group is
-// either missing or unknown.
-func GroupUnknown(b Builder) GroupOption { return func(cs *Group) { cs.Unknown = b } }
+type GroupRewriter func(group *Group, args GroupRunState) (out *GroupRunState)
+
+func GroupRewrite(rw GroupRewriter) GroupOption { return func(cs *Group) { cs.Rewriter = rw } }
 
 func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
 
@@ -79,6 +79,22 @@ func GroupHide(names ...string) GroupOption {
 	}
 }
 
+type GroupRunState struct {
+	// Builder of the subcommand to be run. May be nil if none was found for
+	// the Subcommand arg. You may replace this with any builder you like.
+	Builder Builder
+
+	// The name of the builder, which may be the same as Subcommand, unless
+	// it has been modified by a Matcher.
+	Name string
+
+	// The first argument passed to the Group
+	Subcommand string
+
+	// The remaining arguments passed to the Group
+	SubcommandArgs []string
+}
+
 // Group implements a command that delegates to a subcommand. It selects a
 // single Builder from a list of Builders based on the value of the first
 // non-flag argument.
@@ -90,8 +106,10 @@ type Group struct {
 	// string.
 	Builders Builders
 
-	// Handles unknown command invocation. See the GroupUnknown() option for details.
-	Unknown Builder
+	// Allows interception of command strings so you can rewrite them to
+	// other commands. Useful for aliases or handling empty arguments
+	// very differently.
+	Rewriter GroupRewriter
 
 	Before      func(Context) error
 	After       func(Context, error) error
@@ -102,9 +120,7 @@ type Group struct {
 	synopsis string
 	hidden   map[string]bool
 
-	// State:
-	subcommand     string
-	subcommandArgs []string
+	state GroupRunState
 }
 
 var _ Command = &Group{}
@@ -171,8 +187,8 @@ func (cs *Group) Flags() *FlagSet {
 
 func (cs *Group) Configure(flags *FlagSet, args *arg.ArgSet) {
 	args.HideUsage()
-	args.StringOptional(&cs.subcommand, "cmd", "", "Subcommand name")
-	args.Remaining(&cs.subcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
+	args.StringOptional(&cs.state.Subcommand, "cmd", "", "Subcommand name")
+	args.Remaining(&cs.state.SubcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
 }
 
 func (cs *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
@@ -185,16 +201,22 @@ func (cs *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
 }
 
 func (cs *Group) Run(ctx Context) error {
-	bld, name, err := cs.Builder(cs.subcommand)
+	var err error
+	cs.state.Builder, cs.state.Name, err = cs.Builder(cs.state.Subcommand)
 	if err != nil {
 		return err
 	}
 
-	if bld == nil {
-		if cs.Unknown != nil {
-			bld = cs.Unknown
-		} else if cs.subcommand != "" {
-			return UsageError(fmt.Errorf("unknown command %q", cs.subcommand))
+	if cs.Rewriter != nil {
+		newState := cs.Rewriter(cs, cs.state)
+		if newState != nil {
+			cs.state = *newState
+		}
+	}
+
+	if cs.state.Builder == nil {
+		if cs.state.Subcommand != "" {
+			return UsageError(fmt.Errorf("unknown command %q", cs.state.Subcommand))
 		} else {
 			return UsageError(nil)
 		}
@@ -206,7 +228,7 @@ func (cs *Group) Run(ctx Context) error {
 		}
 	}
 
-	err = ctx.Runner().Run(ctx, name, cs.subcommandArgs, bld)
+	err = ctx.Runner().Run(ctx, cs.state.Name, cs.state.SubcommandArgs, cs.state.Builder)
 	if cs.After != nil {
 		err = cs.After(ctx, err)
 	}

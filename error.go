@@ -64,6 +64,11 @@ func UsageErrorf(msg string, args ...interface{}) error {
 	return &usageError{err: fmt.Errorf(msg, args...)}
 }
 
+func IsUsageError(err error) bool {
+	_, ok := err.(*usageError) // FIXME: 1.13, use errors.As()
+	return ok
+}
+
 type exitError struct {
 	code int
 	err  error
