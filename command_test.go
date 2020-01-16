@@ -52,8 +52,13 @@ type testUsageVarsCmd struct {
 }
 
 func (t *testUsageVarsCmd) Run(c Context) error { return nil }
-func (t *testUsageVarsCmd) Synopsis() string    { return "usage vars cmd" }
-func (t *testUsageVarsCmd) Usage() string       { return "{{.Stuff}} {{.Flag}} {{.Arg}}" }
+
+func (t *testUsageVarsCmd) Help() Help {
+	return Help{
+		Synopsis: "usage vars cmd",
+		Usage:    "{{.Stuff}} {{.Flag}} {{.Arg}}",
+	}
+}
 
 func (t *testUsageVarsCmd) Configure(flags *FlagSet, args *arg.ArgSet) {
 	flags.StringVar(&t.Flag, "flag", "", "Var")

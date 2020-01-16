@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/shabbyrobe/cmdy/arg"
-	"github.com/shabbyrobe/cmdy/usage"
+	"github.com/shabbyrobe/cmdy/internal/wrap"
 )
 
 type Builders map[string]Builder
@@ -136,7 +136,12 @@ func NewGroup(synopsis string, builders Builders, opts ...GroupOption) *Group {
 	return cs
 }
 
-func (cs *Group) Synopsis() string { return cs.synopsis }
+func (cs *Group) Help() Help {
+	return Help{
+		Synopsis: cs.synopsis,
+		Usage:    cs.Usage(),
+	}
+}
 
 func (cs *Group) Usage() string {
 	out := cs.usage
@@ -169,10 +174,12 @@ func (cs *Group) Usage() string {
 		indent[i] = ' '
 	}
 
+	wrp := wrap.Wrapper{Indent: string(indent)}
+
 	for _, l := range names {
 		s := cs.Builders[l]()
-		syn := s.Synopsis()
-		syn = usage.Wrap(syn, string(indent), 0)
+		syn := s.Help().Synopsis
+		syn = wrp.Wrap(syn)
 		out += fmt.Sprintf("    %-*s  %s\n", width, l, syn)
 	}
 	return out

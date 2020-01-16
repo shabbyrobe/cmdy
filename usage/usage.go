@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/shabbyrobe/cmdy/internal/wrap"
 )
 
-const DefaultWrap = 80
 const indent = "        "
 
 var indentFlag = indent[:len(indent)-4]
@@ -63,7 +64,7 @@ func Usage(width int, usables ...Usable) string {
 			}
 		}
 
-		s += Wrap(usage, indent, width)
+		s += wrap.Wrapper{Indent: indent, Width: width}.Wrap(usage)
 
 		out.WriteString(s)
 		out.WriteByte('\n')
@@ -184,64 +185,4 @@ func isZeroValue(usable Usable, value string) bool {
 		return true
 	}
 	return false
-}
-
-// Wrap should not be used or relied upon outside cmdy. Changes to the API of
-// Wrap will not be considered grounds for a semver bump. Use at your own risk.
-func Wrap(str string, indent string, width int) string {
-	str = strings.TrimSpace(str)
-
-	if width <= 0 {
-		width = DefaultWrap
-	}
-
-	out := ""
-	var ln int
-	for _, line := range strings.Split(str, "\n") {
-		for {
-			if ln > 0 {
-				out += "\n" + indent
-			}
-
-			var (
-				i, j     int
-				c        rune
-				breaking bool
-				inEsc    bool
-			)
-
-			for j, c = range line {
-				if i == width {
-					breaking = true
-					break
-				}
-
-				// Don't count ASCII escape sequences towards line width:
-				if inEsc {
-					if c == 'm' {
-						inEsc = false
-					}
-				} else {
-					if c == '\033' {
-						inEsc = true
-					} else {
-						i++
-					}
-				}
-			}
-
-			cur := line[:j]
-			idx := strings.LastIndexAny(cur, " -")
-			if idx < 0 || !breaking {
-				out += line
-				break
-			} else {
-				out += line[:idx]
-				line = line[idx+1:]
-			}
-			ln++
-		}
-	}
-
-	return out
 }

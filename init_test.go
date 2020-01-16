@@ -25,8 +25,7 @@ func testBuilder(c Command) func() Command {
 	return func() Command { return c }
 }
 
-func (t *testCmd) Synopsis() string  { return t.synopsis }
-func (t *testCmd) Usage() string     { return t.usage }
+func (t *testCmd) Help() Help        { return Help{Synopsis: t.synopsis, Usage: t.usage} }
 func (t *testCmd) Flags() *FlagSet   { return t.flags }
 func (t *testCmd) Args() *arg.ArgSet { return t.args }
 

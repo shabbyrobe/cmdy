@@ -11,7 +11,7 @@ import (
 
 func yep(t *testing.T, in string, out ...string) {
 	t.Helper()
-	result, err := SplitString(in)
+	result, err := ParseString(in, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func yep(t *testing.T, in string, out ...string) {
 
 func nup(t *testing.T, in string, expected error) {
 	t.Helper()
-	_, err := SplitString(in)
+	_, err := ParseString(in, "")
 	if err == nil {
 		t.Fatal()
 	}
@@ -103,6 +103,6 @@ var BenchSplitResult []string
 
 func BenchmarkSplitString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		BenchSplitResult, _ = SplitString(`foo bar 'baz' "qux" \n "yep" `)
+		BenchSplitResult, _ = ParseString(`foo bar 'baz' "qux" \n "yep" `, "")
 	}
 }

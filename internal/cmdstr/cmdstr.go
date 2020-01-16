@@ -40,7 +40,7 @@ const (
 	stateEsc
 )
 
-// Pare implements shell-esque string-splitting rules, similar to Python's shlex.
+// Parse implements shell-esque string-splitting rules, similar to Python's shlex.
 //
 // Parsing ends when all arguments are successfully consumed, when invalid syntax
 // is encountered, or when one of the characters in 'endset' is encountered while
@@ -215,14 +215,14 @@ end:
 	return out, i, nil
 }
 
-func SplitString(cmd string) ([]string, error) {
+func ParseString(cmd string, endset string) ([]string, error) {
 	hdr := *(*reflect.StringHeader)(unsafe.Pointer(&cmd))
 	cmdBytes := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: hdr.Data,
 		Len:  hdr.Len,
 		Cap:  hdr.Len,
 	}))
-	out, _, err := Parse(cmdBytes, "")
+	out, _, err := Parse(cmdBytes, endset)
 	return out, err
 }
 

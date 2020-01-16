@@ -2,6 +2,7 @@ package cmdy
 
 import (
 	"io"
+	"os"
 
 	"github.com/shabbyrobe/cmdy/internal/istty"
 )
@@ -50,4 +51,31 @@ func ReaderIsPipe(in io.Reader) bool {
 //
 func WriterIsPipe(out io.Writer) bool {
 	return istty.CheckTTY(out) == istty.IsPipe
+}
+
+// ProgName attempts to guess the program name from the first argument in os.Args.
+func ProgName() string {
+	if len(os.Args) < 1 {
+		return ""
+	}
+	return baseName(os.Args[0])
+}
+
+// baseName is a cut-down remix of filepath.Base that saves us a dependency
+// and skips use-cases that we don't need to worry about, like windows volume
+// names, etc, because we are only using it to grab the program name.
+func baseName(path string) string {
+	// Strip trailing slashes.
+	for len(path) > 0 && os.IsPathSeparator(path[len(path)-1]) {
+		path = path[0 : len(path)-1]
+	}
+	// Find the last element
+	i := len(path) - 1
+	for i >= 0 && !os.IsPathSeparator(path[i]) {
+		i--
+	}
+	if i >= 0 {
+		path = path[i+1:]
+	}
+	return path
 }

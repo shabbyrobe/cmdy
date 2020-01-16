@@ -1,6 +1,7 @@
 package cmdy
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,14 +30,15 @@ type Error interface {
 	error
 }
 
-// QuietExit will prevent cmdy.Fatal() from printing an error message on exit,
-// but will still call os.Exit() with the status code it represents.
+// QuietExit is an error you can return to prevent cmdy.Fatal() from printing an error
+// message on exit, but still cause it to call os.Exit() with the status code it
+// represents.
 type QuietExit int
 
 func (e QuietExit) Code() int     { return int(e) }
 func (e QuietExit) Error() string { return fmt.Sprintf("exit code %d", e) }
 
-// ErrWithCode allows you to wrap an error in a status code which will be used
+// ErrWithCode allows you to tag an arbitrary error with a status code which will be used
 // by cmdy.Fatal() as the exit code.
 func ErrWithCode(code int, err error) error {
 	if ee, ok := err.(*exitError); ok {
@@ -46,16 +48,16 @@ func ErrWithCode(code int, err error) error {
 	return &exitError{err: err, code: code}
 }
 
+// HelpRequest returns an error that will instruct cmdy.Fatal() to print the full command
+// help.
+func HelpRequest() error {
+	return &usageError{showFullHelp: true}
+}
+
 // UsageError wraps an existing error so that cmdy.Fatal() will print the full
 // command usage above the error message.
 func UsageError(err error) error {
 	return &usageError{err: err}
-}
-
-// HelpRequest wraps an existing error so that cmdy.Fatal() will print the full
-// command help.
-func HelpRequest() error {
-	return &usageError{help: true}
 }
 
 // UsageErrorf formats an error message so that cmdy.Fatal() will print the full
@@ -65,8 +67,21 @@ func UsageErrorf(msg string, args ...interface{}) error {
 }
 
 func IsUsageError(err error) bool {
-	_, ok := err.(*usageError) // FIXME: 1.13, use errors.As()
-	return ok
+	var u *usageError
+	return errors.As(err, &u)
+}
+
+// ErrCode returns the error code associated with the error if it implements
+// cmdy.Error, or ExitInternal if not.
+func ErrCode(err error) (code int) {
+	if err == nil {
+		return ExitSuccess
+	}
+	e, ok := err.(Error)
+	if !ok {
+		return ExitInternal
+	}
+	return e.Code()
 }
 
 type exitError struct {
@@ -75,18 +90,18 @@ type exitError struct {
 }
 
 func (e *exitError) Code() int     { return e.code }
-func (e *exitError) Cause() error  { return e.err }
+func (e *exitError) Unwrap() error { return e.err }
 func (e *exitError) Error() string { return e.err.Error() }
 
 type usageError struct {
-	err       error
-	usage     string
-	help      bool
-	populated bool
+	err          error
+	usage        string
+	showFullHelp bool
+	populated    bool
 }
 
-func (u *usageError) Code() int    { return ExitUsage }
-func (u *usageError) Cause() error { return u.err }
+func (u *usageError) Code() int     { return ExitUsage }
+func (u *usageError) Unwrap() error { return u.err }
 
 func (u *usageError) Error() string {
 	if u.err == nil {
@@ -95,33 +110,49 @@ func (u *usageError) Error() string {
 	return u.err.Error()
 }
 
-func (u *usageError) populate(usage string, flagSet *FlagSet, argSet *arg.ArgSet) {
+func (u *usageError) populate(usage string, path []string, flagSet *FlagSet, argSet *arg.ArgSet, examples Examples) {
 	if u.populated {
 		return
 	}
 	u.populated = true
 
-	out := strings.TrimSpace(usage) + "\n"
+	var out strings.Builder
+	out.WriteString(strings.TrimSpace(usage))
+	out.WriteByte('\n')
+
+	// FIXME: this stuff feels like it doesn't belong here:
 
 	if flagSet != nil {
 		fu := flagSet.Usage()
 		if fu != "" {
-			if out != "" {
-				out += "\n"
+			if out.Len() > 0 {
+				out.WriteByte('\n')
 			}
-			out += "Flags:\n" + fu
+			out.WriteString("Flags:\n")
+			out.WriteString(fu)
 		}
 	}
+
 	if argSet != nil {
 		au := argSet.Usage()
 		if au != "" {
-			if out != "" {
-				out += "\n"
+			if out.Len() > 0 {
+				out.WriteByte('\n')
 			}
-			out += "Arguments:\n" + au + "\n"
+			out.WriteString("Arguments:\n")
+			out.WriteString(au)
 		}
 	}
-	u.usage = out
+
+	if u.showFullHelp && len(examples) > 0 {
+		if out.Len() > 0 {
+			out.WriteByte('\n')
+		}
+		out.WriteString("Examples:\n")
+		examples.render(&out, path, "  ")
+	}
+
+	u.usage = out.String()
 }
 
 type errorGroup interface {

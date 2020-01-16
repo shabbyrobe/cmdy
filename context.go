@@ -61,6 +61,7 @@ func (c *commandContext) Pop() (name string, cmd Command) {
 }
 
 // FIXME: this name is not good
+
 type CommandRef struct {
 	Name    string
 	Command Command

@@ -117,6 +117,7 @@ func (u usableFlag) Describe(kind string, hint string) string {
 	}
 }
 
+// devNull avoids a dependency on ioutil
 type devNull struct{}
 
 func (devNull) Write(p []byte) (int, error) {

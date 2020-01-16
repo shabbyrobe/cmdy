@@ -14,7 +14,9 @@ func newMainGroupCommand() cmdy.Command {
 	return &mainGroupCommand{}
 }
 
-func (cmd *mainGroupCommand) Synopsis() string { return "Example main group command" }
+func (cmd *mainGroupCommand) Help() cmdy.Help {
+	return cmdy.Synopsis("Example main group command")
+}
 
 func (cmd *mainGroupCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {}
 

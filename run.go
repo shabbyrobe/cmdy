@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"text/template"
 
 	"github.com/shabbyrobe/cmdy/arg"
 )
@@ -102,7 +101,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		if uerr, ok := rerr.(*usageError); ok {
 			path := CommandPath(cctx)
 
-			usageTpl, err := r.usageTpl(cmd, uerr.help, path, flagSet, argSet)
+			usageTpl, err := buildUsageTpl(cmd.Help(), uerr.showFullHelp, path, flagSet, argSet)
 			if err != nil {
 				panic(err)
 			}
@@ -112,7 +111,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 				panic(err)
 			}
 
-			uerr.populate(buf.String(), flagSet, argSet)
+			uerr.populate(buf.String(), path, flagSet, argSet, cmd.Help().Examples)
 		}
 	}()
 
@@ -160,57 +159,6 @@ func (r *Runner) Fatal(err error) {
 		}
 	}
 	os.Exit(code)
-}
-
-func (r *Runner) usageTpl(cmd Command, fullHelp bool, path []string, flagSet *FlagSet, argSet *arg.ArgSet) (tpl *template.Template, rerr error) {
-	// Update the documentation for the Usage interface if you add new functions
-	// to this map:
-	fns := template.FuncMap{
-		"Synopsis": func() string {
-			return cmd.Synopsis()
-		},
-		"Invocation": func() string {
-			out := strings.Join(path, " ")
-			if flagSet != nil {
-				out += " "
-				out += flagSet.Invocation()
-			}
-			if argSet != nil {
-				out += " "
-				out += argSet.Invocation()
-			}
-			return out
-		},
-		"CommandFull": func() string {
-			return strings.Join(path, " ")
-		},
-		"Command": func() string {
-			if len(path) > 0 {
-				return path[len(path)-1]
-			}
-			return ""
-		},
-		"ShowFullHelp": func() bool {
-			return fullHelp
-		},
-	}
-
-	tpl = template.New("usage").Funcs(fns)
-
-	var usageRaw string
-	if ucmd, ok := cmd.(Usage); ok {
-		usageRaw = ucmd.Usage()
-	}
-	if usageRaw == "" {
-		usageRaw = DefaultUsage
-	}
-
-	var err error
-	tpl, err = tpl.Parse(usageRaw)
-	if err != nil {
-		return nil, err
-	}
-	return tpl, nil
 }
 
 // Run the command built by Builder b using the DefaultRunner, passing in the
@@ -300,14 +248,6 @@ func FormatError(err error) (msg string, code int) {
 	return
 }
 
-// ProgName attempts to guess the program name from the first argument in os.Args.
-func ProgName() string {
-	if len(os.Args) < 1 {
-		return ""
-	}
-	return baseName(os.Args[0])
-}
-
 // NewBufferedRunner returns a Runner that wires Stdin, Stdout and Stderr up to
 // bytes.Buffer instances.
 func NewBufferedRunner() *BufferedRunner {
@@ -326,42 +266,3 @@ type BufferedRunner struct {
 	StdoutBuffer bytes.Buffer
 	StderrBuffer bytes.Buffer
 }
-
-// baseName is a cut-down remix of filepath.Base that saves us a dependency
-// and skips use-cases that we don't need to worry about, like windows volume
-// names, etc, because we are only using it to grab the program name.
-func baseName(path string) string {
-	// Strip trailing slashes.
-	for len(path) > 0 && os.IsPathSeparator(path[len(path)-1]) {
-		path = path[0 : len(path)-1]
-	}
-	// Find the last element
-	i := len(path) - 1
-	for i >= 0 && !os.IsPathSeparator(path[i]) {
-		i--
-	}
-	if i >= 0 {
-		path = path[i+1:]
-	}
-	return path
-}
-
-// DefaultUsage is used to generate your usage string when your Command does
-// not implement cmdy.Usage. You can prepend it to your own usage templates
-// if you want to add to it:
-//
-//	const myCommandUsage = cmdy.DefaultUsage + "\n"+ `
-//	Extra stuff about my command that will be stuck on the end.
-//	Etc etc etc.
-//	`
-//
-//	func (c *myCommand) Usage() string { return myCommandUsage }
-//
-const DefaultUsage = `
-{{if Synopsis -}}
-{{Synopsis}}
-
-{{end -}}
-
-Usage: {{Invocation}}
-`
