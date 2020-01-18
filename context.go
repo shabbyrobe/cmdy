@@ -21,7 +21,12 @@ type Context interface {
 
 	Runner() *Runner
 	Stack() []CommandRef
+
+	// Current returns a reference to the topmost Command on the stack:
 	Current() CommandRef
+
+	// Push and Pop are used by Run to ensure that the Command being run is
+	// available in the Context's stack:
 	Push(name string, cmd Command)
 	Pop() (name string, cmd Command)
 }

@@ -9,10 +9,8 @@ import (
 	"github.com/shabbyrobe/cmdy/internal/wrap"
 )
 
-type Builders map[string]Builder
-
-// Matcher allows you to specify a function for resolving a builder from a list of
-// builders when using a Group.
+// Matcher is a function for choosing a command builder from a list of command builders
+// when using a Group.
 //
 // You could use this API to implement short aliases for existing commands too, if
 // you so desired (i.e. "hg co" -> "hg checkout").
@@ -23,16 +21,16 @@ type Builders map[string]Builder
 // choice is ambiguous.
 type Matcher func(bldrs Builders, in string) (bld Builder, name string, rerr error)
 
-type GroupOption func(cs *Group)
+type GroupOption func(grp *Group)
 
-type GroupRewriter func(group *Group, args GroupRunState) (out *GroupRunState)
+// GroupMatcher assigns a Matcher function to the group. Matcher is used for choosing a
+// command builder from a list of command builders when using a Group.
+func GroupMatcher(cm Matcher) GroupOption { return func(grp *Group) { grp.Matcher = cm } }
 
-func GroupRewrite(rw GroupRewriter) GroupOption { return func(cs *Group) { cs.Rewriter = rw } }
-
-func GroupMatcher(cm Matcher) GroupOption { return func(cs *Group) { cs.Matcher = cm } }
-
+// GroupPrefixMatcher assigns the PrefixMatcher of the specified minimum length
+// to the Group's Matcher.
 func GroupPrefixMatcher(minLen int) GroupOption {
-	return func(cs *Group) { cs.Matcher = PrefixMatcher(cs, minLen) }
+	return func(grp *Group) { grp.Matcher = PrefixMatcher(grp, minLen) }
 }
 
 // GroupUsage provides the usage template to the Group.
@@ -79,6 +77,13 @@ func GroupHide(names ...string) GroupOption {
 	}
 }
 
+// NOTE: This is experimental and may change.
+type GroupRewriter func(grp *Group, args GroupRunState) (out *GroupRunState)
+
+// NOTE: This is experimental and may change.
+func GroupRewrite(rw GroupRewriter) GroupOption { return func(grp *Group) { grp.Rewriter = rw } }
+
+// NOTE: This is experimental and may change.
 type GroupRunState struct {
 	// Builder of the subcommand to be run. May be nil if none was found for
 	// the Subcommand arg. You may replace this with any builder you like.
@@ -95,9 +100,28 @@ type GroupRunState struct {
 	SubcommandArgs []string
 }
 
-// Group implements a command that delegates to a subcommand. It selects a
-// single Builder from a list of Builders based on the value of the first
-// non-flag argument.
+// Builders is used by Group to define a list of subcommand arguments to their
+// corresponding Command Builder function. Typical usage is within a Group's
+// constructor:
+//
+//	grp := cmdy.NewGroup("My Group", cmdy.Builders{
+//		"sub1": newSub1Command,
+//		"sub2": newSub2Command,
+//	})
+//
+type Builders map[string]Builder
+
+func (builders Builders) match(matcher Matcher, search string) (bld Builder, name string, err error) {
+	if matcher != nil {
+		return matcher(builders, search)
+	} else {
+		bld, name = builders[search], search
+		return bld, name, nil
+	}
+}
+
+// Group implements a command that delegates to one or more subcommand. It selects a
+// single Builder from Builders based on the value of the first non-flag argument.
 type Group struct {
 	// Builders contains mappings between command names (received as the first
 	// argument to this command) and the builder to delegate to.
@@ -107,8 +131,8 @@ type Group struct {
 	Builders Builders
 
 	// Allows interception of command strings so you can rewrite them to
-	// other commands. Useful for aliases or handling empty arguments
-	// very differently.
+	// other commands. Useful for aliases, or for handling the case where
+	// no subcommand argument is present.
 	Rewriter GroupRewriter
 
 	Before      func(Context) error
@@ -198,13 +222,9 @@ func (cs *Group) Configure(flags *FlagSet, args *arg.ArgSet) {
 	args.Remaining(&cs.state.SubcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
 }
 
-func (cs *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
-	if cs.Matcher != nil {
-		bld, name, rerr = cs.Matcher(cs.Builders, cmd)
-	} else {
-		bld, name = cs.Builders[cmd], cmd
-	}
-	return bld, name, rerr
+func (grp *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
+	bld, name, rerr = grp.Builders.match(grp.Matcher, cmd)
+	return
 }
 
 func (cs *Group) Run(ctx Context) error {

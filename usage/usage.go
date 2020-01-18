@@ -21,8 +21,7 @@ type Usable interface {
 	Value() interface{}
 
 	// Describe is used to format the description of this Usable in the usage
-	// statement according to the Usable's preferredtemplate. Flags are
-	// formatted differently to args, but the inputs are the same.
+	// statement. Flags are formatted differently to args, but the inputs are the same.
 	Describe(kind string, hint string) string
 }
 
@@ -38,6 +37,8 @@ type Hinter interface {
 	Hint() (kind, hint string)
 }
 
+// Usage returns a block of text containing usage descriptions for a list of Usables
+// (i.e. flags and args).
 func Usage(width int, usables ...Usable) string {
 	var out strings.Builder
 

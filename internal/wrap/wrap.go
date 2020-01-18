@@ -57,9 +57,9 @@ func (w Wrapper) Wrap(str string) string {
 					break
 				}
 
-				// HACK: Don't count ASCII escape sequences that change the colour towards
-				// line width: This breaks badly if the text contains other escapes or
-				// control sequences.
+				// FIXME: This tries not to count ASCII escape sequences that change the
+				// colour towards line width, but it breaks badly if the text contains
+				// other escapes or control sequences.
 				if inEsc {
 					if c == 'm' {
 						inEsc = false

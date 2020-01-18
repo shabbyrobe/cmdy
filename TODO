@@ -1,11 +1,8 @@
 Definitely:
+- Completion helpers
+
+Maybe:
+- Support pflag (may not be possible, but would be nice)
 - Hidden flags (separate hide functionality for invocation and usage)
 - Configurable invocation overflow (when '--flag=<v>' becomes '[options]')
-- Reformat flags. Go's default output is ugly and confuses users.
 - Optional grouped flags in help message.
-
-Wishlist:
-- Completion helpers
-- Enumerate flags, when invalid flag detected for child command but detected in parent, offer help.
-- Wrappable invocation (what did I mean by this again?)
-

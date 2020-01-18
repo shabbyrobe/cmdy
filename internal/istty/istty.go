@@ -13,7 +13,7 @@ const (
 	IsPipe    TTYState = 2
 )
 
-// isTTY tries to only return true if the input is actually a terminal.
+// CheckTTY tries to only return true if the input is actually a terminal.
 //
 // os.ModeCharDevice isn't quite enough. I tested various OS/shell combos, using the
 // following code:

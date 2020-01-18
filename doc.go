@@ -6,7 +6,7 @@ features I like from https://github.com/google/subcommands.
 
 cmdy focuses on minimalism and tries to imitate and leverage the stdlib as much as
 possible. It does not attempt to replace `flag.Flag`, though it does extend it slightly.
-It somehow still ended up being bigger than I'd hoped.
+It somehow still ended up being a bit bigger than I'd hoped.
 
 cmdy has no dependencies.
 

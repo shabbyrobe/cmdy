@@ -215,6 +215,7 @@ end:
 	return out, i, nil
 }
 
+// ParseString implements the string-version of Parse. See Parse for more details.
 func ParseString(cmd string, endset string) ([]string, error) {
 	hdr := *(*reflect.StringHeader)(unsafe.Pointer(&cmd))
 	cmdBytes := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
