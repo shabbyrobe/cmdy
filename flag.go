@@ -7,8 +7,6 @@ import (
 	"github.com/shabbyrobe/cmdy/usage"
 )
 
-const flagInvocationSpill = 3
-
 // FlagDoubleDash allows you to globally configure whether long flag names will
 // show in the help message with two dashes or one. This is to appease those
 // who are (not unreasonably) uncomfortable with the fact that the single dash
@@ -53,6 +51,9 @@ func (fs *FlagSet) HideUsage() { fs.hideUsage = true }
 // Invocation string for the flags, for example '[-foo=<yep>] [-bar=<pants>]`.
 // If there are too many flags, `[options]` is returned instead.
 func (fs *FlagSet) Invocation() string {
+	// FIXME: might be nice if this could be configured
+	const flagInvocationSpill = 3
+
 	var options string
 	var i int
 
@@ -83,7 +84,7 @@ func (fs *FlagSet) Usage() string {
 		return ""
 	}
 
-	var usables []usage.Usable
+	var usables = make([]usage.Usable, 0, fs.NFlag())
 	fs.VisitAll(func(f *flag.Flag) {
 		usables = append(usables, usableFlag{f})
 	})
