@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+type remaining struct {
+	arg ArgVal
+	Range
+}
+
+func (r *remaining) Set(s string) error { return r.arg.Set(s) }
+func (r *remaining) String() string {
+	if r.arg != nil {
+		return r.arg.String()
+	}
+	return ""
+}
+
 type stringArg string
 
 func (s *stringArg) Get() interface{} { return string(*s) }
@@ -93,44 +106,29 @@ func (d *durationArg) Set(val string) error {
 	return err
 }
 
-type remaining struct {
-	arg ArgVal
-	Range
-}
+type stringList []string
 
-func (r *remaining) Set(s string) error { return r.arg.Set(s) }
-func (r *remaining) String() string {
-	if r.arg != nil {
-		return r.arg.String()
-	}
-	return ""
-}
+func (s stringList) Get() interface{}  { return []string(s) }
+func (s stringList) Strings() []string { return []string(s) }
 
-type StringList []string
-
-func (s *StringList) String() string {
+func (s *stringList) String() string {
 	if s == nil {
 		return ""
 	}
 	return strings.Join(*s, ",")
 }
 
-func (s *StringList) Get() interface{} { return []string(*s) }
-
-func (s StringList) Strings() []string {
-	out := make([]string, len(s))
-	copy(out, s)
-	return out
-}
-
-func (s *StringList) Set(v string) error {
+func (s *stringList) Set(v string) error {
 	*s = append(*s, v)
 	return nil
 }
 
-type IntList []int
+type intList []int
 
-func (i *IntList) String() string {
+func (i intList) Get() interface{} { return []int(i) }
+func (i intList) Ints() []int      { return []int(i) }
+
+func (i *intList) String() string {
 	if i == nil {
 		return ""
 	}
@@ -144,19 +142,18 @@ func (i *IntList) String() string {
 	return out
 }
 
-func (i *IntList) Get() interface{} { return []int(*i) }
-
-func (i IntList) Ints() []int { return []int(i) }
-
-func (i *IntList) Set(s string) error {
+func (i *intList) Set(s string) error {
 	v, err := strconv.ParseInt(s, 0, strconv.IntSize)
 	*i = append(*i, int(v))
 	return err
 }
 
-type Int64List []int64
+type int64List []int64
 
-func (i *Int64List) String() string {
+func (i int64List) Get() interface{} { return []int64(i) }
+func (i int64List) Ints() []int64    { return []int64(i) }
+
+func (i *int64List) String() string {
 	if i == nil {
 		return ""
 	}
@@ -170,19 +167,18 @@ func (i *Int64List) String() string {
 	return out.String()
 }
 
-func (i *Int64List) Get() interface{} { return []int64(*i) }
-
-func (i Int64List) Ints() []int64 { return []int64(i) }
-
-func (i *Int64List) Set(s string) error {
+func (i *int64List) Set(s string) error {
 	v, err := strconv.ParseInt(s, 0, 64)
 	*i = append(*i, int64(v))
 	return err
 }
 
-type UintList []uint
+type uintList []uint
 
-func (i *UintList) String() string {
+func (i uintList) Get() interface{} { return []uint(i) }
+func (i uintList) Uints() []uint    { return []uint(i) }
+
+func (i *uintList) String() string {
 	if i == nil {
 		return ""
 	}
@@ -196,19 +192,18 @@ func (i *UintList) String() string {
 	return out.String()
 }
 
-func (i *UintList) Get() interface{} { return []uint(*i) }
-
-func (i UintList) Uints() []uint { return []uint(i) }
-
-func (i *UintList) Set(s string) error {
+func (i *uintList) Set(s string) error {
 	v, err := strconv.ParseUint(s, 0, strconv.IntSize)
 	*i = append(*i, uint(v))
 	return err
 }
 
-type Uint64List []uint64
+type uint64List []uint64
 
-func (i *Uint64List) String() string {
+func (i uint64List) Get() interface{} { return []uint64(i) }
+func (i uint64List) Uints() []uint64  { return []uint64(i) }
+
+func (i *uint64List) String() string {
 	if i == nil {
 		return ""
 	}
@@ -222,19 +217,18 @@ func (i *Uint64List) String() string {
 	return out.String()
 }
 
-func (i *Uint64List) Get() interface{} { return []uint64(*i) }
-
-func (i Uint64List) Uints() []uint64 { return []uint64(i) }
-
-func (i *Uint64List) Set(s string) error {
+func (i *uint64List) Set(s string) error {
 	v, err := strconv.ParseUint(s, 0, 64)
 	*i = append(*i, uint64(v))
 	return err
 }
 
-type Float64List []float64
+type float64List []float64
 
-func (i *Float64List) String() string {
+func (i float64List) Get() interface{}    { return []float64(i) }
+func (i float64List) Float64s() []float64 { return []float64(i) }
+
+func (i *float64List) String() string {
 	if i == nil {
 		return ""
 	}
@@ -248,11 +242,7 @@ func (i *Float64List) String() string {
 	return out.String()
 }
 
-func (i *Float64List) Get() interface{} { return []float64(*i) }
-
-func (i Float64List) Float64s() []float64 { return []float64(i) }
-
-func (i *Float64List) Set(s string) error {
+func (i *float64List) Set(s string) error {
 	v, err := strconv.ParseFloat(s, 64)
 	*i = append(*i, float64(v))
 	return err

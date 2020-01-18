@@ -121,7 +121,7 @@ func (a *ArgSet) Parse(input []string) error {
 // 	Use arg.MinMax(1, 3) to require at least 1 arg and at most 3 args.
 //
 func (a *ArgSet) Remaining(p *[]string, name string, minmax Range, usage string) {
-	a.RemainingVar((*StringList)(p), name, minmax, usage)
+	a.RemainingVar((*stringList)(p), name, minmax, usage)
 }
 
 // RemainingInts collects all args after the last defined argument into the
@@ -130,7 +130,7 @@ func (a *ArgSet) Remaining(p *[]string, name string, minmax Range, usage string)
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingInts(p *[]int, name string, minmax Range, usage string) {
-	a.RemainingVar((*IntList)(p), name, minmax, usage)
+	a.RemainingVar((*intList)(p), name, minmax, usage)
 }
 
 // RemainingInt64s collects all args after the last defined argument into the
@@ -139,7 +139,7 @@ func (a *ArgSet) RemainingInts(p *[]int, name string, minmax Range, usage string
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingInt64s(p *[]int64, name string, minmax Range, usage string) {
-	a.RemainingVar((*Int64List)(p), name, minmax, usage)
+	a.RemainingVar((*int64List)(p), name, minmax, usage)
 }
 
 // RemainingInt64s collects all args after the last defined argument into the
@@ -148,7 +148,7 @@ func (a *ArgSet) RemainingInt64s(p *[]int64, name string, minmax Range, usage st
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingUints(p *[]uint, name string, minmax Range, usage string) {
-	a.RemainingVar((*UintList)(p), name, minmax, usage)
+	a.RemainingVar((*uintList)(p), name, minmax, usage)
 }
 
 // RemainingUint64s collects all args after the last defined argument into the
@@ -157,7 +157,7 @@ func (a *ArgSet) RemainingUints(p *[]uint, name string, minmax Range, usage stri
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingUint64s(p *[]uint64, name string, minmax Range, usage string) {
-	a.RemainingVar((*Uint64List)(p), name, minmax, usage)
+	a.RemainingVar((*uint64List)(p), name, minmax, usage)
 }
 
 // RemainingFloat64s collects all args after the last defined argument into the
@@ -166,7 +166,7 @@ func (a *ArgSet) RemainingUint64s(p *[]uint64, name string, minmax Range, usage 
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingFloat64s(p *[]float64, name string, minmax Range, usage string) {
-	a.RemainingVar((*Float64List)(p), name, minmax, usage)
+	a.RemainingVar((*float64List)(p), name, minmax, usage)
 }
 
 // RemainingVar collects all args after the last defined argument into the
