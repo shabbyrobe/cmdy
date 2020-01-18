@@ -4,15 +4,8 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"strings"
 	"testing"
 )
-
-const expectedMod = `
-module github.com/shabbyrobe/cmdy
-
-go 1.12
-`
 
 func TestNoDeps(t *testing.T) {
 	if os.Getenv("CMDY_SKIP_MOD") != "" {
@@ -20,20 +13,25 @@ func TestNoDeps(t *testing.T) {
 		t.Skip()
 	}
 
+	fix, err := ioutil.ReadFile("go.mod.fix")
+	if err != nil {
+		panic(err)
+	}
+
 	{
 		bts, err := ioutil.ReadFile("go.mod")
-		if os.IsNotExist(err) {
-			t.Skip()
+		if err != nil {
+			t.Fatal(err)
 		}
-		if !bytes.Equal([]byte(strings.TrimSpace(expectedMod)), bytes.TrimSpace(bts)) {
+		if !bytes.Equal(fix, bts) {
 			t.Fatal("go.mod contains unexpected content")
 		}
 	}
 
 	{
 		bts, err := ioutil.ReadFile("go.sum")
-		if os.IsNotExist(err) {
-			t.Skip()
+		if err != nil {
+			t.Fatal(err)
 		}
 		if len(bts) != 0 {
 			t.Fatal("go.sum contains unexpected content")
