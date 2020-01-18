@@ -147,7 +147,9 @@ func TestGroup_Hide(t *testing.T) {
 		GroupHide("9rdjKX3j", "OZJpKePU"),
 	)
 
-	out := grp.Usage()
+	var bld strings.Builder
+	tt.MustOK(grp.BuildHelp(&bld))
+	out := bld.String()
 	tt.MustAssert(!strings.Contains(out, "OZJpKePU"))
 	tt.MustAssert(!strings.Contains(out, "9rdjKX3j"))
 	tt.MustAssert(strings.Contains(out, "GM68tb0F"))
