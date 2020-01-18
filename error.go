@@ -3,6 +3,7 @@ package cmdy
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // FIXME: these are Unix codes, but other operating systems use
@@ -79,6 +80,70 @@ func ErrCode(err error) (code int) {
 		return ExitInternal
 	}
 	return e.Code()
+}
+
+// FormatError builds the output which should be printed to the console.
+//
+// If the error is a usage error, the full help string will be assigned
+// to msg, and if the usage error wraps another error, the text will be
+// included at the end.
+//
+// If the error contains an 'Errors() []error' method, each individual
+// error is printed in a list.
+//
+// If the error is a QuietExit, msg is empty but code will be set to the
+// status code.
+//
+// Otherwise, msg will contain the result of calling Error().
+//
+func FormatError(err error) (msg string, code int) {
+	if err == nil {
+		return "", ExitSuccess
+	}
+
+	switch err := err.(type) {
+	case QuietExit:
+		// If we don't return here, a code of '0' will be interpreted as an
+		// ExitFailure. In the case of QuietExit, it's a little bit less
+		// natural to assume '0' means we want a non-zero exit status even
+		// though we are technically returning an error.
+		return "", err.Code()
+
+	case *usageError:
+		// usageError.usage is lazily populated in Runner.Run() before it is returned:
+		msg = strings.TrimSpace(err.usage)
+		code = err.Code()
+
+		if err.err != nil {
+			if msg != "" {
+				msg += "\n\n"
+			}
+			msg += "error: " + err.err.Error()
+		}
+
+	case Error:
+		msg, code = err.Error(), err.Code()
+
+	case errorGroup:
+		errs := err.Errors()
+		last := len(errs) - 1
+		// TODO: wrap?
+		for i, e := range errs {
+			msg += "- " + e.Error()
+			if i != last {
+				msg += "\n"
+			}
+		}
+
+	default:
+		msg = err.Error()
+	}
+
+	if code == 0 {
+		code = ExitFailure
+	}
+
+	return
 }
 
 type exitError struct {

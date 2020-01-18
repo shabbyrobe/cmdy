@@ -56,6 +56,12 @@ func TestSplitString(t *testing.T) {
 	yep(t, `'foo'   'bar'`, `foo`, `bar`)
 	yep(t, `  'foo'   'bar'  `, `foo`, `bar`)
 
+	// Escapes in bare arguments:
+	yep(t, `foo\nbar`, "foo\nbar")
+
+	// XXX: deviation from shlex. shlex errors with 'unclosed quotation, but we just ignore the escape
+	yep(t, `foo\'bar`, `foo\'bar`)
+
 	// Newline escapes in double quotes:
 	yep(t, `"\`+"\n"+`foo"`, "foo")
 	yep(t, `"f\`+"\n"+`oo"`, "foo")

@@ -82,4 +82,33 @@ func TestRun(t *testing.T) {
 		// flag should work:
 		tt.MustOK(rn.Run(context.Background(), "test", []string{"--foo", "bar"}, bld))
 	})
+
+	t.Run("no-args-no-flags", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+
+		tc := &testCmd{}
+		bld := func() Command { return tc }
+		rn := newTestRunner()
+
+		// one argument should produce a usage error:
+		err := rn.Run(context.Background(), "test", []string{"a"}, bld)
+		tt.MustEqual(ExitUsage, errCode(err))
+
+		// one empty argument should produce a usage error:
+		err = rn.Run(context.Background(), "test", []string{""}, bld)
+		tt.MustEqual(ExitUsage, errCode(err))
+
+		// two arguments should produce a usage error:
+		err = rn.Run(context.Background(), "test", []string{"a", "b"}, bld)
+		tt.MustEqual(ExitUsage, errCode(err))
+
+		// unexpected flag should produce a usage error:
+		err = rn.Run(context.Background(), "test", []string{"--quack"}, bld)
+		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+
+		// --help should produce a usage error even with an argument:
+		err = rn.Run(context.Background(), "test", []string{"--help", "arg"}, bld)
+		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+	})
+
 }

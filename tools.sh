@@ -1,11 +1,14 @@
 #!/bin/bash
 set -o errexit -o nounset -o pipefail
 
-gotest() {
-    go test -coverprofile=cover.out \
-        -coverpkg=github.com/shabbyrobe/cmdy,github.com/shabbyrobe/cmdy/usage,github.com/shabbyrobe/cmdy/flags,github.com/shabbyrobe/cmdy/arg \
-        github.com/shabbyrobe/cmdy/...
+cmd-testcvg() {
+    go test -coverprofile=cover.out github.com/shabbyrobe/cmdy/...
+    go tool cover -html=cover.out
 }
 
-"$1" "${@:2}"
+cmd-sloc() {
+    tokei --exclude '*_test.go' .
+}
+
+"cmd-$1" "${@:2}"
 

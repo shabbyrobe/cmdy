@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"flag"
-	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/shabbyrobe/cmdy/arg"
 )
@@ -65,8 +63,8 @@ func NewStandardRunner() *Runner {
 // to Runner.Fatal(), not log.Fatal(), if you want nice errors and usage printed.
 //
 func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
-	cmd := b()
 	var (
+		cmd     = b()
 		flagSet *FlagSet
 		argSet  *arg.ArgSet
 	)
@@ -127,13 +125,8 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 	}
 
 	remArgs := flagSet.Args()
-	if argSet != nil {
-		if err := argSet.Parse(remArgs); err != nil {
-			return UsageError(err)
-		}
-
-	} else if len(remArgs) > 0 {
-		return UsageError(fmt.Errorf("expected 0 arguments, found %d", len(remArgs)))
+	if err := argSet.Parse(remArgs); err != nil {
+		return UsageError(err)
 	}
 
 	return cmd.Run(cctx)
@@ -194,55 +187,6 @@ func Run(ctx context.Context, args []string, b Builder) (rerr error) {
 //
 func Fatal(err error) {
 	DefaultRunner().Fatal(err)
-}
-
-func FormatError(err error) (msg string, code int) {
-	if err == nil {
-		return "", ExitSuccess
-	}
-
-	switch err := err.(type) {
-	case QuietExit:
-		// If we don't return here, a '0' code will be interpreted as an
-		// ExitFailure. In the case of QuietExit, it's a little bit less
-		// natural to assume '0' means we want a non-zero exit status even
-		// though we are technically returning an error.
-		return "", err.Code()
-
-	case *usageError:
-		// usageError.usage is lazily populated in Runner.Run() before it is returned:
-		msg = strings.TrimSpace(err.usage)
-		code = err.Code()
-
-		if err.err != nil {
-			if msg != "" {
-				msg += "\n\n"
-			}
-			msg += "error: " + err.err.Error()
-		}
-
-	case Error:
-		msg, code = err.Error(), err.Code()
-
-	case errorGroup:
-		errs := err.Errors()
-		last := len(errs) - 1
-		for i, e := range errs {
-			msg += "- " + e.Error()
-			if i != last {
-				msg += "\n"
-			}
-		}
-
-	default:
-		msg = err.Error()
-	}
-
-	if code == 0 {
-		code = ExitFailure
-	}
-
-	return
 }
 
 // NewBufferedRunner returns a Runner that wires Stdin, Stdout and Stderr up to

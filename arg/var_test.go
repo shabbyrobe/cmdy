@@ -6,18 +6,6 @@ import (
 	"github.com/shabbyrobe/cmdy/internal/assert"
 )
 
-/*
-▶+Float64List : []float64
-
-▶+Int64List : []int64
-
-▶+IntList : []int
-
-▶+StringList : []string
-
-▶+Uint64List : []uint64
-*/
-
 func TestIntVar(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		tt := assert.WrapTB(t)

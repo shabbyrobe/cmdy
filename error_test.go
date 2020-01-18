@@ -2,6 +2,7 @@ package cmdy
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/internal/assert"
@@ -25,4 +26,20 @@ func TestFormatError(t *testing.T) {
 	msg, code := FormatError(err)
 	tt.MustEqual("boom", msg)
 	tt.MustEqual(3, code)
+}
+
+func TestFormatErrorWithWrappedUsageError(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	err := UsageError(ErrWithCode(3, errors.New("boom")))
+	msg, code := FormatError(err)
+	tt.MustEqual("error: boom", msg)
+	tt.MustEqual(127, code)
+}
+
+func TestUsageErrorCanUnwrap(t *testing.T) {
+	tt := assert.WrapTB(t)
+	err := fmt.Errorf("YEPPO")
+	uerr := UsageError(err)
+	tt.MustEqual(err, errors.Unwrap(uerr))
 }
