@@ -104,9 +104,18 @@ the subcommand path may be missing from the start of the invocation.
 type Example struct {
 	Desc    string
 	Command string
-	Code    int
-	Input   string
-	Output  string
+
+	// Expected status code from command run.
+	//	Code == 0   expect success
+	//	Code >  0   expect specific failure code
+	//	Code <  0   expect any non-zero exit
+	//
+	// If you are using ExampleParseOnly as your TestMode, you probably want
+	// to expect cmdy.ExitUsage if you expect failure.
+	Code int
+
+	Input  string
+	Output string
 
 	// If true, the output is always hidden.
 	HideOutput bool

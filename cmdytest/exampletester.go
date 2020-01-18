@@ -11,11 +11,15 @@ import (
 	"github.com/shabbyrobe/cmdy/internal/cmdstr"
 )
 
+// ExampleTester tests a set of examples from a cmdy.Help.
+//
+// NOTE: this is an experimental API and may change without warning.
+//
 type ExampleTester struct {
 	TestName string
 	Builder  cmdy.Builder
-	Setup    func(c cmdy.Command)
-	Cleanup  func(c cmdy.Command)
+	Setup    func(cmd cmdy.Command)
+	Cleanup  func(cmd cmdy.Command)
 }
 
 func (e *ExampleTester) wrapBuilder(example cmdy.Example) cmdy.Builder {
@@ -55,11 +59,16 @@ func (e *ExampleTester) RunExample(example cmdy.Example) error {
 	builder := e.wrapBuilder(example)
 	runErr := runner.Run(ctx, "tester", args, builder)
 	code := cmdy.ErrCode(runErr)
-	if code != example.Code {
+
+	if code == 0 && example.Code == 0 {
+		// all good
+	} else if code > 0 && code != example.Code {
 		return fmt.Errorf("unexpected code %d, expected %d: %w", code, example.Code, runErr)
+	} else if code == 0 && example.Code < 0 {
+		return fmt.Errorf("unexpected success, expected non-zero exit code: %w", runErr)
 	}
 
-	// FIXME: output
+	// FIXME: test output
 
 	return nil
 }
