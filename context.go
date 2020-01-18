@@ -3,6 +3,7 @@ package cmdy
 import (
 	"context"
 	"io"
+	"strings"
 )
 
 // Context implements context.Context; Context is passed into all commands
@@ -20,7 +21,10 @@ type Context interface {
 	Stderr() io.Writer
 
 	Runner() *Runner
-	Stack() []CommandRef
+
+	// Stack contains references to all the commands and subcommands that have been Run,
+	// but have not yet completed:
+	Stack() CommandPath
 
 	// Current returns a reference to the topmost Command on the stack:
 	Current() CommandRef
@@ -44,8 +48,8 @@ func (c *commandContext) Stdin() io.Reader  { return c.runner.Stdin }
 func (c *commandContext) Stdout() io.Writer { return c.runner.Stdout }
 func (c *commandContext) Stderr() io.Writer { return c.runner.Stderr }
 
-func (c *commandContext) Runner() *Runner     { return c.runner }
-func (c *commandContext) Stack() []CommandRef { return c.parents }
+func (c *commandContext) Runner() *Runner    { return c.runner }
+func (c *commandContext) Stack() CommandPath { return c.parents }
 
 func (c *commandContext) Current() (ref CommandRef) {
 	if len(c.parents) > 0 {
@@ -72,11 +76,16 @@ type CommandRef struct {
 	Command Command
 }
 
-func CommandPath(ctx Context) (out []string) {
-	parents := ctx.Stack()
-	out = make([]string, 0, len(parents))
-	for i := 0; i < len(parents); i++ {
-		out = append(out, parents[i].Name)
+type CommandPath []CommandRef
+
+func (cp CommandPath) Invocation() string {
+	return strings.Join(cp.Names(), " ")
+}
+
+func (cp CommandPath) Names() []string {
+	out := make([]string, len(cp))
+	for i, r := range cp {
+		out[i] = r.Name
 	}
 	return out
 }

@@ -33,9 +33,17 @@ func GroupPrefixMatcher(minLen int) GroupOption {
 	return func(grp *Group) { grp.Matcher = PrefixMatcher(grp, minLen) }
 }
 
-// GroupUsage provides the usage template to the Group.
-// The result of this function may be cached.
-func GroupUsage(usage string) GroupOption { return func(cs *Group) { cs.usage = usage } }
+// GroupUsage sets the Usage string in the Group's Help. The result of this function may
+// be cached.
+func GroupUsage(usage string) GroupOption {
+	return func(grp *Group) { grp.help.Usage = usage }
+}
+
+// GroupExamples sets the Examples in the Group's Help. The result of this function may
+// be cached.
+func GroupExamples(examples ...Example) GroupOption {
+	return func(grp *Group) { grp.help.Examples = examples }
+}
 
 // GroupFlags provides a function that creates a FlagSet to the Group.
 // This function may return nil. The result of this function may be cached.
@@ -140,9 +148,8 @@ type Group struct {
 	FlagBuilder func() *FlagSet
 	Matcher     Matcher
 
-	usage    string
-	synopsis string
-	hidden   map[string]bool
+	help   Help
+	hidden map[string]bool
 
 	state GroupRunState
 }
@@ -150,43 +157,28 @@ type Group struct {
 var _ Command = &Group{}
 
 func NewGroup(synopsis string, builders Builders, opts ...GroupOption) *Group {
-	cs := &Group{
-		synopsis: synopsis,
+	grp := &Group{
+		help:     Help{Synopsis: synopsis},
 		Builders: builders,
 	}
 	for _, o := range opts {
-		o(cs)
+		o(grp)
 	}
-	return cs
+	return grp
 }
 
-func (cs *Group) Help() Help {
-	return Help{
-		Synopsis: cs.synopsis,
-		Usage:    cs.Usage(),
-	}
-}
+func (grp *Group) Help() Help { return grp.help }
 
-func (cs *Group) Usage() string {
-	out := cs.usage
-	if out == "" {
-		out = DefaultUsage
-	}
-	out = strings.TrimSpace(out)
-
-	if out != "" {
-		out += "\n\n"
-	}
-
-	out += "Commands:\n"
-	names := make([]string, 0, len(cs.Builders))
+func (grp *Group) BuildHelp(into *strings.Builder) error {
+	into.WriteString("Commands:\n")
+	names := make([]string, 0, len(grp.Builders))
 	width := 6
-	for name := range cs.Builders {
+	for name := range grp.Builders {
 		ln := len(name)
 		if ln > width {
 			width = ln
 		}
-		if cs.hidden == nil || !cs.hidden[name] {
+		if grp.hidden == nil || !grp.hidden[name] {
 			names = append(names, name)
 		}
 	}
@@ -201,25 +193,26 @@ func (cs *Group) Usage() string {
 	wrp := wrap.Wrapper{Indent: string(indent)}
 
 	for _, l := range names {
-		s := cs.Builders[l]()
+		s := grp.Builders[l]()
 		syn := s.Help().Synopsis
 		syn = wrp.Wrap(syn)
-		out += fmt.Sprintf("    %-*s  %s\n", width, l, syn)
+		fmt.Fprintf(into, "    %-*s  %s\n", width, l, syn)
 	}
-	return out
+
+	return nil
 }
 
-func (cs *Group) Flags() *FlagSet {
-	if cs.FlagBuilder != nil {
-		return cs.FlagBuilder()
+func (grp *Group) Flags() *FlagSet {
+	if grp.FlagBuilder != nil {
+		return grp.FlagBuilder()
 	}
 	return nil
 }
 
-func (cs *Group) Configure(flags *FlagSet, args *arg.ArgSet) {
+func (grp *Group) Configure(flags *FlagSet, args *arg.ArgSet) {
 	args.HideUsage()
-	args.StringOptional(&cs.state.Subcommand, "cmd", "", "Subcommand name")
-	args.Remaining(&cs.state.SubcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
+	args.StringOptional(&grp.state.Subcommand, "cmd", "", "Subcommand name")
+	args.Remaining(&grp.state.SubcommandArgs, "args", arg.AnyLen, "Subcommand arguments")
 }
 
 func (grp *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
@@ -227,37 +220,39 @@ func (grp *Group) Builder(cmd string) (bld Builder, name string, rerr error) {
 	return
 }
 
-func (cs *Group) Run(ctx Context) error {
+func (grp *Group) Run(ctx Context) error {
 	var err error
-	cs.state.Builder, cs.state.Name, err = cs.Builder(cs.state.Subcommand)
+	grp.state.Builder, grp.state.Name, err = grp.Builder(grp.state.Subcommand)
 	if err != nil {
 		return err
 	}
 
-	if cs.Rewriter != nil {
-		newState := cs.Rewriter(cs, cs.state)
+	if grp.Rewriter != nil {
+		newState := grp.Rewriter(grp, grp.state)
 		if newState != nil {
-			cs.state = *newState
+			grp.state = *newState
 		}
 	}
 
-	if cs.state.Builder == nil {
-		if cs.state.Subcommand != "" {
-			return UsageError(fmt.Errorf("unknown command %q", cs.state.Subcommand))
+	if grp.state.Builder == nil {
+		if grp.state.Subcommand != "" {
+			return UsageError(fmt.Errorf("unknown command %q", grp.state.Subcommand))
 		} else {
 			return UsageError(nil)
 		}
 	}
 
-	if cs.Before != nil {
-		if err := cs.Before(ctx); err != nil {
+	if grp.Before != nil {
+		if err := grp.Before(ctx); err != nil {
 			return err
 		}
 	}
 
-	err = ctx.Runner().Run(ctx, cs.state.Name, cs.state.SubcommandArgs, cs.state.Builder)
-	if cs.After != nil {
-		err = cs.After(ctx, err)
+	err = ctx.Runner().Run(ctx, grp.state.Name, grp.state.SubcommandArgs, grp.state.Builder)
+	if grp.After != nil {
+		// XXX: this intentionally replaces the error. it's intended to allow
+		// implementers of After to rewrite/replace the error if desired.
+		err = grp.After(ctx, err)
 	}
 
 	return err

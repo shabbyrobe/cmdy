@@ -15,6 +15,7 @@ func TestExampleRender(t *testing.T) {
 	}
 
 	var o strings.Builder
-	ex.render(&o, nil, "  ")
+	es := exampleSection{}
+	es.renderExample(&o, &ex, "")
 	fmt.Println(o.String())
 }

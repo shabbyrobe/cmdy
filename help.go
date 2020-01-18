@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/shabbyrobe/cmdy/arg"
 	"github.com/shabbyrobe/cmdy/internal/wrap"
 )
+
+// DefaultUsage exists for compatibility with earlier versions.
+// It will be removed at a later date.
+//
+// Deprecated
+const DefaultUsage = ""
 
 // Help groups related pieces of information that can be assembled into a
 // help message. Only Synopsis is required. As a shorthand, you can use
@@ -21,41 +28,8 @@ type Help struct {
 	// cli.Fatal() if a UsageError is returned (for example when the '-help' flag is
 	// passed).
 	//
-	// If Usage is an empty string, cmdy.DefaultUsage is used.
-	//
-	// The string in Usage is parsed by the text/template package
-	// (https://golang.org/pkg/text/template/). The template makes the following functions
-	// available:
-	//
-	//     {{Invocation}}
-	//         Full invocation string for the command, i.e.
-	//         'cmd sub subsub [options] <args...>'.
-	//         This invocation does not include parent command flags.
-	//
-	//     {{Synopsis}}
-	//         Command.Synopsis()
-	//
-	//     {{CommandFull}}
-	//         Full command name including all parent commands, i.e. 'cmd sub subsub'.
-	//
-	//     {{Command}}
-	//         Current command name, not including parent command names. i.e. for
-	//         command 'cmd sub subsub', only 'subsub' is returned.
-	//
-	//     {{if ShowFullHelp}}...{{end}}
-	//         Help section contained inside the '...' should only be shown if the
-	//         command's '--help' was requested, not if the command's usage is to
-	//         be shown.
-	//
-	//
-	// Your Command instance is used as the 'data' argument to Template.Execute(),
-	// so any exported fields from your command can be used in the template like
-	// so: "{{.MyCommandField}}".
-	//
-	// If a Command intends cmdy to print the usage in response to an error,
-	// cmdy.UsageError or cmdy.UsageErrorf should be returned from Command.Run().
-	//
-	// To obtain an actual usage string from a usage error, use cmdy.Format(err).
+	// To obtain the full help message from a usage error yourself (outside of
+	// cmdy.Fatal), use cmdy.FormatError(err).
 	Usage string
 
 	Examples Examples
@@ -133,10 +107,161 @@ const (
 	ExampleRun       ExampleTestMode = 1
 )
 
-func (e Example) render(into *strings.Builder, path []string, indent string) {
-	const maxInWidth = wrap.DefaultWrap
+func buildHelp(
+	cmd Command,
+	showFullHelp bool,
+	path CommandPath,
+	flagSet *FlagSet,
+	argSet *arg.ArgSet,
+) (string, error) {
+	help := cmd.Help()
+
+	sections := []HelpSection{
+		synopsisSection{&help},
+		invocationSection{path, flagSet, argSet},
+		usageSection{&help},
+		flagSection{flagSet},
+		argSection{argSet},
+		exampleSection{help.Examples, path},
+		commandSection{cmd},
+	}
+
+	var out strings.Builder
+	var lastLen = 0
+	var lastSec = len(sections)
+
+	for idx, sec := range sections {
+		if err := sec.BuildHelp(&out); err != nil {
+			return "", err
+		}
+
+		total := out.Len()
+		if total > lastLen && idx != lastSec {
+			out.WriteByte('\n')
+		}
+		lastLen = out.Len()
+	}
+
+	return out.String(), nil
+}
+
+type HelpSection interface {
+	BuildHelp(into *strings.Builder) error
+}
+
+type synopsisSection struct {
+	help *Help
+}
+
+func (s synopsisSection) BuildHelp(into *strings.Builder) error {
+	synopsis := strings.TrimSpace(s.help.Synopsis)
+	if synopsis == "" {
+		return nil
+	}
+	into.WriteString(synopsis)
+	into.WriteByte('\n')
+	return nil
+}
+
+type invocationSection struct {
+	path    CommandPath
+	flagSet *FlagSet
+	argSet  *arg.ArgSet
+}
+
+func (i invocationSection) BuildHelp(into *strings.Builder) error {
+	into.WriteString("Usage: ")
+
+	for idx, p := range i.path {
+		if idx > 0 {
+			into.WriteByte(' ')
+		}
+		into.WriteString(p.Name)
+	}
+
+	if i.flagSet != nil {
+		into.WriteByte(' ')
+		into.WriteString(i.flagSet.Invocation())
+	}
+
+	if i.argSet != nil {
+		into.WriteByte(' ')
+		into.WriteString(i.argSet.Invocation())
+	}
+
+	into.WriteByte('\n')
+
+	return nil
+}
+
+type usageSection struct {
+	help *Help
+}
+
+func (us usageSection) BuildHelp(into *strings.Builder) error {
+	usage := strings.TrimSpace(us.help.Usage)
+	if usage == "" {
+		return nil
+	}
+	into.WriteString(usage)
+	into.WriteByte('\n')
+	return nil
+}
+
+type flagSection struct {
+	flagSet *FlagSet
+}
+
+func (fs flagSection) BuildHelp(into *strings.Builder) error {
+	if fs.flagSet != nil {
+		fu := fs.flagSet.Usage()
+		if fu != "" {
+			into.WriteString("Flags:\n")
+			into.WriteString(fu)
+		}
+	}
+	return nil
+}
+
+type argSection struct {
+	argSet *arg.ArgSet
+}
+
+func (as argSection) BuildHelp(into *strings.Builder) error {
+	if as.argSet != nil {
+		au := as.argSet.Usage()
+		if au != "" {
+			into.WriteString("Arguments:\n")
+			into.WriteString(au)
+		}
+	}
+	return nil
+}
+
+type exampleSection struct {
+	examples Examples
+	path     CommandPath
+}
+
+func (es exampleSection) BuildHelp(into *strings.Builder) error {
+	if len(es.examples) > 0 {
+		pathStr := es.path.Invocation()
+		into.WriteString("Examples:\n")
+		for idx, e := range es.examples {
+			if idx > 0 {
+				into.WriteByte('\n')
+			}
+			es.renderExample(into, &e, pathStr)
+		}
+	}
+	return nil
+}
+
+func (es exampleSection) renderExample(into *strings.Builder, e *Example, pathStr string) {
+	const maxInHideSize = 20
 	const maxOutWidth = wrap.DefaultWrap
 	const maxOutLines = 2
+	const indent = "  "
 
 	if e.Command == "" || e.TestOnly {
 		return
@@ -152,13 +277,12 @@ func (e Example) render(into *strings.Builder, path []string, indent string) {
 
 	{ // Command:
 		cmd := e.Command
-		if len(path) > 0 {
-			cmd = strings.Join(path, " ") + " " + cmd
+		if len(pathStr) > 0 {
+			cmd = pathStr + " " + cmd
 		}
 
 		if e.Input != "" {
-			const fudge = 10
-			if len(e.Input)+len(e.Command)+fudge < maxInWidth { // near enough is good enough
+			if len(e.Input) <= maxInHideSize {
 				cmd = fmt.Sprintf("echo %q | %s", e.Input, e.Command)
 			} else {
 				cmd = fmt.Sprintf("... | %s", e.Command)
@@ -200,15 +324,14 @@ func (e Example) render(into *strings.Builder, path []string, indent string) {
 	}
 }
 
-func (ex Examples) render(into *strings.Builder, path []string, indent string) {
-	if len(ex) == 0 {
-		return
-	}
+type commandSection struct {
+	cmd Command
+}
 
-	for idx, e := range ex {
-		if idx > 0 {
-			into.WriteByte('\n')
-		}
-		e.render(into, path, "  ")
+func (cs commandSection) BuildHelp(into *strings.Builder) error {
+	hs, ok := cs.cmd.(HelpSection)
+	if !ok {
+		return nil
 	}
+	return hs.BuildHelp(into)
 }

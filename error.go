@@ -3,9 +3,6 @@ package cmdy
 import (
 	"errors"
 	"fmt"
-	"strings"
-
-	"github.com/shabbyrobe/cmdy/arg"
 )
 
 // FIXME: these are Unix codes, but other operating systems use
@@ -97,7 +94,6 @@ type usageError struct {
 	err          error
 	usage        string
 	showFullHelp bool
-	populated    bool
 }
 
 func (u *usageError) Code() int     { return ExitUsage }
@@ -108,51 +104,6 @@ func (u *usageError) Error() string {
 		return "usage error"
 	}
 	return u.err.Error()
-}
-
-func (u *usageError) populate(usage string, path []string, flagSet *FlagSet, argSet *arg.ArgSet, examples Examples) {
-	if u.populated {
-		return
-	}
-	u.populated = true
-
-	var out strings.Builder
-	out.WriteString(strings.TrimSpace(usage))
-	out.WriteByte('\n')
-
-	// FIXME: this stuff feels like it doesn't belong here:
-
-	if flagSet != nil {
-		fu := flagSet.Usage()
-		if fu != "" {
-			if out.Len() > 0 {
-				out.WriteByte('\n')
-			}
-			out.WriteString("Flags:\n")
-			out.WriteString(fu)
-		}
-	}
-
-	if argSet != nil {
-		au := argSet.Usage()
-		if au != "" {
-			if out.Len() > 0 {
-				out.WriteByte('\n')
-			}
-			out.WriteString("Arguments:\n")
-			out.WriteString(au)
-		}
-	}
-
-	if u.showFullHelp && len(examples) > 0 {
-		if out.Len() > 0 {
-			out.WriteByte('\n')
-		}
-		out.WriteString("Examples:\n")
-		examples.render(&out, path, "  ")
-	}
-
-	u.usage = out.String()
 }
 
 type errorGroup interface {

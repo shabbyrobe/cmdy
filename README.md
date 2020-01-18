@@ -35,75 +35,95 @@ the basics:
 
 ```go
 type demoCommand struct {
-	testFlag string
-	testArg  string
-	rem      []string
+    testFlag string
+    testArg  string
+    rem      []string
 }
 
 func newDemoCommand() cmdy.Command {
-	return &demoCommand{}
+    return &demoCommand{}
 }
 
-func (t *demoCommand) Synopsis() string { return "My command is a command that does stuff" }
-
-func (t *demoCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {
-	flags.StringVar(&t.testFlag, "test", "", "Test flag")
-	args.String(&t.testArg, "test", "Test arg")
-	args.Remaining(&t.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
+func (cmd *demoCommand) Help() cmdy.Help {
+    return cmdy.Synopsis("My command is a command that does stuff")
 }
 
-func (t *demoCommand) Run(ctx cmdy.Context) error {
-	fmt.Println(t.testFlag, t.testArg, t.rem)
-	return nil
+func (cmd *demoCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {
+    flags.StringVar(&cmd.testFlag, "test", "", "Test flag")
+    args.String(&cmd.testArg, "test", "Test arg")
+    args.Remaining(&cmd.rem, "things", arg.AnyLen, "Any number of extra string arguments.")
+}
+
+func (cmd *demoCommand) Run(ctx cmdy.Context) error {
+    // Use ctx.Stdout() if you want to make it easier to test your command,
+    // but it's fine to just use fmt.Println():
+    fmt.Fprintln(ctx.Stdout(), cmd.testFlag, cmd.testArg, cmd.rem)
+    return nil
 }
 
 func main() {
-	if err := run(); err != nil {
-		cmdy.Fatal(err)
-	}
+    if err := run(); err != nil {
+        cmdy.Fatal(err)
+    }
 }
 
 func run() error {
-	nestedGroupBuilder := func() cmdy.Command {
-		return cmdy.NewGroup(
-			"Nested group",
-			cmdy.Builders{"subcmd": newDemoCommand},
-		)
-	}
+    nestedGroupBuilder := func() cmdy.Command {
+        return cmdy.NewGroup(
+            "Nested group",
+            cmdy.Builders{"subcmd": newDemoCommand},
+        )
+    }
 
-	mainGroupBuilder := func() cmdy.Command {
-		return cmdy.NewGroup(
-			"My command group",
-			cmdy.Builders{
-				"cmd":  newDemoCommand,
-				"nest": nestedGroupBuilder,
-			},
-		)
-	}
-	return cmdy.Run(context.Background(), os.Args[1:], mainGroupBuilder)
+    mainGroupBuilder := func() cmdy.Command {
+        return cmdy.NewGroup(
+            "My command group",
+            cmdy.Builders{
+                "cmd":  newDemoCommand,
+                "nest": nestedGroupBuilder,
+            },
+        )
+    }
+    return cmdy.Run(context.Background(), os.Args[1:], mainGroupBuilder)
 }
 ```
 
-You can customise the help message by implementing the optional `cmdy.Usage`
-interface. ``Usage()`` is a go ``text/template`` that has access to your
-command as its vars:
+You can add more Usage information by returning a `cmdy.Help` structure from
+the `Help()` method:
 
 ```go
-const myCommandUsage = `
-{{Synopsis}}
-
-Usage: {{Invocation}}
-
-Stuff is {{.Stuff}}
+const demoCommandUsage = `
+Additional help for the command
 `
 
-type myCommand struct {
-    Stuff string
+func (cmd *demoCommand) Help() cmdy.Help {
+    return cmdy.Help{
+        Synopsis: "My command is a command that does stuff",
+        Usage:    demoCommandUsage,
+    }
 }
-
-var _ cmdy.Usage = &myCommand{}
-
-func (t *myCommand) Usage() string { return myCommandUsage }
-
-// myCommand implements the rest of cmdy.Command...
 ```
+
+You can also add examples (which can be run using 
+`github.com/shabbyrobe/cmdy/cmdytest.ExampleTester` to the `cmdy.Help` structure.
+Individual fields are explained in more detail in godoc:
+
+```go
+func (cmd *demoCommand) Help() cmdy.Help {
+    return cmdy.Help{
+        // ...
+        Examples: cmdy.Examples{
+            {
+                Desc:    "Do a thing with this command:",
+                Command: "-test foo bar baz", // <-- start at this command's flags, not parents
+            },
+            {
+                Desc:    "This won't work",
+                Command: "-flem flarg flub",
+                Code:    cmdy.ExitUsage,
+            },
+        },
+    }
+}
+```
+

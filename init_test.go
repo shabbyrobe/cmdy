@@ -61,3 +61,14 @@ func newTestRunner() *testRunner {
 	}
 	return tr
 }
+
+func errCode(err error) int {
+	switch err := err.(type) {
+	case interface{ Code() int }:
+		return err.Code()
+	case nil:
+		return 0
+	default:
+		return 1
+	}
+}

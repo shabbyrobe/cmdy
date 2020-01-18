@@ -38,7 +38,7 @@ func Reset() {
 // Runner provides access to standard input and output streams to cmdy.Command.
 // Commands should access these streams via Runner rather than via os.Stdin, etc.
 //
-// This is not strictly required, and some situations may necessitate using the
+// It is necessary to use Runner, and some situations may necessitate using the
 // os streams directly, but using os streams directly without a good reason
 // limits your command's testability.
 //
@@ -98,20 +98,18 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 	defer cctx.Pop()
 
 	defer func() {
-		if uerr, ok := rerr.(*usageError); ok {
-			path := CommandPath(cctx)
-
-			usageTpl, err := buildUsageTpl(cmd.Help(), uerr.showFullHelp, path, flagSet, argSet)
+		// when a nested command raises a usage error, we only want the topmost
+		// call to Run() to handle filling in the usage, but this defer() block
+		// gets called for all commands on the stack. checking uerr.usage
+		// prevents all parents of the command that raised the usageError from
+		// clobbering the already-built usage.
+		if uerr, ok := rerr.(*usageError); ok && uerr.usage == "" {
+			path := cctx.Stack()
+			help, err := buildHelp(cmd, uerr.showFullHelp, path, flagSet, argSet)
 			if err != nil {
 				panic(err)
 			}
-
-			var buf bytes.Buffer
-			if err := usageTpl.Execute(&buf, cmd); err != nil {
-				panic(err)
-			}
-
-			uerr.populate(buf.String(), path, flagSet, argSet, cmd.Help().Examples)
+			uerr.usage = help
 		}
 	}()
 
@@ -212,8 +210,7 @@ func FormatError(err error) (msg string, code int) {
 		return "", err.Code()
 
 	case *usageError:
-		// usageError.usage is lazily populated from a Go text/template in
-		// Runner.Run() before it is returned:
+		// usageError.usage is lazily populated in Runner.Run() before it is returned:
 		msg = strings.TrimSpace(err.usage)
 		code = err.Code()
 
