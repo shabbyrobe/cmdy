@@ -2,6 +2,7 @@ package cmdyutil
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -49,7 +50,7 @@ func ReadStdinOrFile(ctx cmdy.Context, fileName string) (bts []byte, err error) 
 }
 
 func IsStdinOrFileError(err error) bool {
-	return err == errStdinOrFileBoth || err == errStdinOrFileNeither
+	return errors.Is(err, errStdinOrFileBoth) || errors.Is(err, errStdinOrFileNeither)
 }
 
 var (
