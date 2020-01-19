@@ -65,7 +65,13 @@ func InterruptibleRun(ctx context.Context, args []string, b cmdy.Builder) (rerr 
 	return NewInterruptRunner(cmdy.DefaultRunner()).Run(ctx, cmdy.ProgName(), args, b)
 }
 
-func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, b cmdy.Builder) (rerr error) {
+// Run the command created by builder. If the program receives an os.Interrupt,
+// ctx will be cancelled. If your command does not handle the 'ctx.Done()' condition
+// in time, Run will return an error.
+//
+// A goroutine will be leaked if your command never completes in response to the
+// Interrupt.
+func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, builder cmdy.Builder) (rerr error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 
@@ -73,7 +79,7 @@ func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, b
 	signal.Notify(sig, os.Interrupt)
 
 	go func() {
-		done <- r.Runner.Run(ctx, name, args, b)
+		done <- r.Runner.Run(ctx, name, args, builder)
 	}()
 
 	select {
