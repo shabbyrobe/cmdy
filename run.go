@@ -11,24 +11,17 @@ import (
 )
 
 var (
-	defaultRunner *Runner
+	defaultRunner = NewStandardRunner()
 )
 
 // DefaultRunner is the global runner used by Run() and Fatal().
-//
-// It is intended to be used once from your main() function and is not safe for
-// concurrent use. More sophisticated use cases can be supported by creating
-// your own Runner directly.
 func DefaultRunner() *Runner {
-	if defaultRunner == nil {
-		defaultRunner = NewStandardRunner()
-	}
 	return defaultRunner
 }
 
 // Reset is here just for testing purposes.
 func Reset() {
-	defaultRunner = nil
+	defaultRunner = NewStandardRunner()
 }
 
 // Runner builds and runs your command.
