@@ -35,6 +35,13 @@ type Context interface {
 	Pop() (name string, cmd Command)
 }
 
+// IsDone returns true if the context's Done() channel would not block.
+// This provides a simpler, more literate mechanism for checking context
+// completion in commands that do not block in a select{}.
+func IsDone(ctx Context) bool {
+	return ctx.Err() != nil
+}
+
 type commandContext struct {
 	context.Context
 	cmd     Command
