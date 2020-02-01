@@ -17,6 +17,8 @@ extend it slightly.
 though a brief overview is provided in this README. If anything is unclear, please
 submit a GitHub issue.
 
+`cmdy` has no dependencies beyond the stdlib.
+
 
 Features
 --------
