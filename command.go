@@ -4,35 +4,47 @@ import (
 	"github.com/shabbyrobe/cmdy/arg"
 )
 
+/*
+Command represents a single command in a cmdy application.
+
+A Command is created by a Builder, which is itself passed to cmdy.Run.
+
+To dispatch subcommands to multiple Command implementations, see cmdy.Group.
+
+Minimal 'Hello World' implementation:
+
+	type myCommand struct {}
+
+	func myCommandBuilder() cmdy.Command { return &myCommand{} }
+
+	func (cmd *myCommand) Help() Help { return cmdy.Synopsis("Hello world") }
+
+	func (cmd *myCommand) Configure(flags *cmdy.FlagSet, args *arg.ArgSet) {}
+
+	func (cmd *myCommand) Run(ctx Context) error {
+		fmt.Fprintln(ctx.Stdout(), "Hello world!")
+		return nil
+	}
+
+	func run() error {
+		return cmdy.Run(context.Background(), os.Args[1:], myCommandBuilder)
+	}
+
+	func main() {
+		if err := run(); err != nil {
+			cmdy.Fatal(err)
+		}
+	}
+*/
 type Command interface {
 	Help() Help
 
+	// Configure allows you to add flags and args to the FlagSet and ArgSet respectively.
+	// You should not call any methods on them that aren't directly related to adding
+	// flags and args.
 	Configure(flags *FlagSet, args *arg.ArgSet)
 
-	Run(Context) error
-}
-
-// CommandArgs allows you to override the construction of the ArgSet in your Command. If
-// your command does not implement this, it will receive a fresh instance of arg.ArgSet.
-type CommandArgs interface {
-	Command
-
-	// Args defines positional arguments for your command. If you want to accept
-	// all args, use github.com/shabbyrobe/cmdy/arg.All(). If no ArgSet is
-	// returned, any arguments will cause an error.
-	Args() *arg.ArgSet
-}
-
-// CommandFlags allows you to override the construction of the FlagSet in your Command.
-// If your command does not implement this, it will receive a fresh instance of
-// cmdy.FlagSet.
-type CommandFlags interface {
-	Command
-
-	// Flag definitions for your command. May return nil. If no FlagSet is
-	// returned, --help is still supported but all other flags will cause an
-	// error.
-	Flags() *FlagSet
+	Run(ctx Context) error
 }
 
 /*

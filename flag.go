@@ -8,10 +8,9 @@ import (
 )
 
 // FlagDoubleDash allows you to globally configure whether long flag names will
-// show in the help message with two dashes or one. This is to appease those
-// who are (not unreasonably) uncomfortable with the fact that the single dash
-// longopt direction the Go team decided to take is totally out of step with
-// almost the entire Unix world around us.
+// show in the help message with two dashes or one. Some people seem to dislike
+// the single-dash longopts and Go supports both anyway, so if you are in this
+// camp, this is the var for you.
 var FlagDoubleDash = false
 
 // FlagSet is a cmdy specific extension of flag.FlagSet; it is intended to

@@ -61,12 +61,15 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		flagSet *FlagSet
 		argSet  *arg.ArgSet
 	)
-	if acmd, ok := cmd.(CommandArgs); ok {
+
+	// FIXME: see if we can remove this; only a test depends on it at the moment:
+	if acmd, ok := cmd.(interface{ Args() *arg.ArgSet }); ok {
 		argSet = acmd.Args()
 	}
-	if fcmd, ok := cmd.(CommandFlags); ok {
+	if fcmd, ok := cmd.(interface{ Flags() *FlagSet }); ok {
 		flagSet = fcmd.Flags()
 	}
+
 	if argSet == nil {
 		argSet = arg.NewArgSet()
 	}

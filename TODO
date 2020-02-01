@@ -2,7 +2,6 @@ Definitely:
 - Completion helpers
 
 Maybe:
-- Support pflag (may not be possible, but would be nice)
 - Hidden flags (separate hide functionality for invocation and usage)
 - Configurable invocation overflow (when '--flag=<v>' becomes '[options]')
 - Optional grouped flags in help message.
