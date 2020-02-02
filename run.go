@@ -52,8 +52,11 @@ func NewStandardRunner() *Runner {
 
 // Run builds and runs your command.
 //
-// If using Run() in your main() function, the returned error should be passed
-// to Runner.Fatal(), not log.Fatal(), if you want nice errors and usage printed.
+// If calling from your main() function, the returned error should be passed to the
+// Runner's Fatal() method, not log.Fatal(), if you want nice errors and usage printed.
+//
+// 'name' should be the top-level name of your program. You can use ProgName() to guess
+// the program's name from os.Args[0].
 //
 func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder) (rerr error) {
 	var (
