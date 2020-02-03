@@ -38,7 +38,7 @@ func TestCommand_TemplateDefault(t *testing.T) {
 
 	usage := Run(context.Background(), []string{"-help"}, testBuilder(c))
 	txt, code := FormatError(usage)
-	tt.MustEqual(127, code)
+	tt.MustEqual(ExitUsage, code)
 
 	// Warning: brittle test
 	tt.MustEqual("synopsis\n\nUsage: cmdy.test [options] \n\nTest", txt)

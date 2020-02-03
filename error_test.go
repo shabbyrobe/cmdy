@@ -34,7 +34,7 @@ func TestFormatErrorWithWrappedUsageError(t *testing.T) {
 	err := UsageError(ErrWithCode(3, errors.New("boom")))
 	msg, code := FormatError(err)
 	tt.MustEqual("error: boom", msg)
-	tt.MustEqual(127, code)
+	tt.MustEqual(ExitUsage, code)
 }
 
 func TestUsageErrorCanUnwrap(t *testing.T) {

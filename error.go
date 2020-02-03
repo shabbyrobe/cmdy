@@ -13,13 +13,16 @@ import (
 // so it's probably a good idea to avoid that. Discussion will be
 // on one or both of these threads:
 //
-// https://groups.google.com/forum/#!msg/golang-nuts/u9NgKibJsKI/XxCdDihFDAAJ
-// https://github.com/golang/go/issues/24284
+//	- https://groups.google.com/forum/#!msg/golang-nuts/u9NgKibJsKI/XxCdDihFDAAJ
+// 	- https://github.com/golang/go/issues/24284
+// 	- https://manpage.me/index.cgi?apropos=0&q=sysexits&sektion=0&manpath=FreeBSD+12-RELEASE&arch=default&format=html
+// 	- http://tldp.org/LDP/abs/html/exitcodes.html
+// 	- https://man.openbsd.org/sysexits
 //
 const (
 	ExitSuccess  = 0
 	ExitFailure  = 1
-	ExitUsage    = 127
+	ExitUsage    = 64
 	ExitInternal = 255
 )
 

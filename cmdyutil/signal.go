@@ -3,7 +3,6 @@ package cmdyutil
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -13,14 +12,15 @@ import (
 
 const DefaultInterruptTimeout = 2 * time.Second
 
+const ExitInterrupt = 130 // 128 + signal 2
+
 type InterruptRunnerOption func(i *InterruptRunner)
 
-// InterruptRunner is a cmdy.Runner that cancels the cmdy.Context passed
-// to your command when an Interrupt signal is received by your app.
+// InterruptRunner is a cmdy.Runner that cancels the cmdy.Context passed to your command
+// when an Interrupt signal is received by your app.
 //
-// If you send another interrupt while InterruptRunner is waiting for
-// your command to exit, it aborts your command immediately and does
-// not wait for shutdown to complete.
+// If you send another interrupt while InterruptRunner is waiting for your command to
+// exit, it aborts your command immediately and does not wait for shutdown to complete.
 //
 // NOTE: This API is experimental.
 type InterruptRunner struct {
@@ -100,9 +100,9 @@ func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, b
 	case err := <-done:
 		return err
 	case <-sig:
-		return r.onAbort
+		return ErrInterruptAborted
 	case <-wait:
-		return r.onTimeout
+		return ErrInterruptTimeout
 	}
 
 	return nil
@@ -113,11 +113,22 @@ func IsInterruptErr(err error) bool {
 }
 
 var (
-	ErrInterruptAborted = fmt.Errorf("aborted!")
-	ErrInterruptTimeout = &errInterruptTimeout{}
+	ErrInterruptAborted cmdy.Error = &errInterruptAborted{}
+	ErrInterruptTimeout cmdy.Error = &errInterruptTimeout{}
 )
 
-type errInterruptTimeout struct{}
+type errInterruptAborted struct{}
 
-func (*errInterruptTimeout) Timeout() bool { return true }
-func (*errInterruptTimeout) Error() string { return "timeout waiting for shutdown!" }
+func (*errInterruptAborted) Error() string     { return "aborted!" }
+func (*errInterruptAborted) Is(err error) bool { return err == ErrInterruptAborted }
+func (*errInterruptAborted) Code() int         { return ExitInterrupt }
+
+type errInterruptTimeout struct {
+	inner error
+}
+
+func (*errInterruptTimeout) Timeout() bool     { return true }
+func (*errInterruptTimeout) Error() string     { return "timeout waiting for shutdown!" }
+func (*errInterruptTimeout) Is(err error) bool { return err == ErrInterruptTimeout }
+func (*errInterruptTimeout) Code() int         { return ExitInterrupt }
+func (e *errInterruptTimeout) Unwrap() error   { return e.inner }
