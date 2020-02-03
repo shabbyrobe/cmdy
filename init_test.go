@@ -1,8 +1,6 @@
 package cmdy
 
 import (
-	"bytes"
-
 	"github.com/shabbyrobe/cmdy/arg"
 )
 
@@ -25,6 +23,8 @@ func testBuilder(c Command) func() Command {
 	return func() Command { return c }
 }
 
+func (t *testCmd) AsBuilder() Builder { return func() Command { return t } }
+
 func (t *testCmd) Help() Help        { return Help{Synopsis: t.synopsis, Usage: t.usage} }
 func (t *testCmd) Flags() *FlagSet   { return t.flags }
 func (t *testCmd) Args() *arg.ArgSet { return t.args }
@@ -43,23 +43,6 @@ func (t *testCmd) Run(c Context) error {
 		return t.run(c)
 	}
 	return nil
-}
-
-type testRunner struct {
-	stdin  bytes.Buffer
-	stdout bytes.Buffer
-	stderr bytes.Buffer
-	*Runner
-}
-
-func newTestRunner() *testRunner {
-	tr := &testRunner{}
-	tr.Runner = &Runner{
-		Stdin:  &tr.stdin,
-		Stdout: &tr.stdout,
-		Stderr: &tr.stderr,
-	}
-	return tr
 }
 
 func errCode(err error) int {

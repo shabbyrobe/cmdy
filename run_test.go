@@ -2,6 +2,7 @@ package cmdy
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/shabbyrobe/cmdy/arg"
@@ -18,7 +19,7 @@ func TestRun(t *testing.T) {
 
 		tc := &testCmd{args: as}
 		bld := func() Command { return tc }
-		rn := newTestRunner()
+		rn := NewBufferedRunner()
 
 		// missing argument should produce a usage error:
 		err := rn.Run(context.Background(), "test", nil, bld)
@@ -32,9 +33,10 @@ func TestRun(t *testing.T) {
 		err = rn.Run(context.Background(), "test", []string{"--quack"}, bld)
 		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
 
-		// --help should produce a usage error even with an argument:
+		// --help should produce a 0 exit status even with an argument:
 		err = rn.Run(context.Background(), "test", []string{"--help", "arg"}, bld)
-		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+		tt.MustEqual(0, errCode(err), "%v", err)
+		tt.MustAssert(IsHelpRequest(err))
 
 		// double-dash should work
 		tt.MustOK(rn.Run(context.Background(), "test", []string{"--", "--quack"}, bld))
@@ -52,7 +54,7 @@ func TestRun(t *testing.T) {
 
 		tc := &testCmd{flags: fs}
 		bld := func() Command { return tc }
-		rn := newTestRunner()
+		rn := NewBufferedRunner()
 
 		// no arguments, no flags, no worries:
 		tt.MustOK(rn.Run(context.Background(), "test", nil, bld))
@@ -88,7 +90,7 @@ func TestRun(t *testing.T) {
 
 		tc := &testCmd{}
 		bld := func() Command { return tc }
-		rn := newTestRunner()
+		rn := NewBufferedRunner()
 
 		// one argument should produce a usage error:
 		err := rn.Run(context.Background(), "test", []string{"a"}, bld)
@@ -106,9 +108,25 @@ func TestRun(t *testing.T) {
 		err = rn.Run(context.Background(), "test", []string{"--quack"}, bld)
 		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
 
-		// --help should produce a usage error even with an argument:
+		// --help should produce 0 exit status even with an argument:
 		err = rn.Run(context.Background(), "test", []string{"--help", "arg"}, bld)
-		tt.MustEqual(ExitUsage, errCode(err), "%v", err)
+		tt.MustEqual(0, errCode(err), "%v", err)
+		tt.MustAssert(IsHelpRequest(err))
 	})
+}
 
+func TestHelpRequest(t *testing.T) {
+	tt := assert.WrapTB(t)
+
+	run := NewBufferedRunner()
+
+	{ // IsHelpRequest should match even if the help request error is wrapped:
+		cmd := &testCmd{
+			run: func(ctx Context) error {
+				return fmt.Errorf("wrapped %w", HelpRequest())
+			},
+		}
+		err := run.Run(context.Background(), "test", []string{"--help"}, cmd.AsBuilder())
+		tt.MustAssert(IsHelpRequest(err))
+	}
 }

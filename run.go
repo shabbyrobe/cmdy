@@ -102,7 +102,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, b Builder)
 		// clobbering the already-built usage.
 		if uerr, ok := rerr.(*usageError); ok && uerr.usage == "" {
 			path := cctx.Stack()
-			help, err := buildHelp(cmd, uerr.showFullHelp, path, flagSet, argSet)
+			help, err := buildHelp(cmd, path, flagSet, argSet)
 			if err != nil {
 				panic(err)
 			}

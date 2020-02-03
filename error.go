@@ -51,8 +51,10 @@ func ErrWithCode(code int, err error) error {
 
 // HelpRequest returns an error that will instruct cmdy.Fatal() to print the full command
 // help.
+//
+// You can test for this error type using IsHelpRequest(err).
 func HelpRequest() error {
-	return &usageError{showFullHelp: true}
+	return &usageError{helpRequest: true}
 }
 
 // UsageError wraps an existing error so that cmdy.Fatal() will print the full
@@ -67,6 +69,17 @@ func UsageErrorf(msg string, args ...interface{}) error {
 	return &usageError{err: fmt.Errorf(msg, args...)}
 }
 
+// IsHelpRequest returns true if err (or the result of errors.Unwrap) is a help request.
+func IsHelpRequest(err error) bool {
+	var u *usageError
+	if !errors.As(err, &u) {
+		return false
+	}
+	return u.helpRequest
+}
+
+// IsUsageError returns true if err (or the result of errors.Unwrap) is a usage error.
+// This includes help requests.
 func IsUsageError(err error) bool {
 	var u *usageError
 	return errors.As(err, &u)
@@ -123,30 +136,28 @@ func FormatError(err error) (msg string, code int) {
 			}
 			msg += "error: " + err.err.Error()
 		}
+		return msg, code
 
 	case Error:
-		msg, code = err.Error(), err.Code()
+		return err.Error(), err.Code()
 
 	case errorGroup:
-		errs := err.Errors()
-		last := len(errs) - 1
-		// TODO: wrap?
-		for i, e := range errs {
-			msg += "- " + e.Error()
-			if i != last {
+		withCode, _ := err.(interface{ Code() int })
+		code = ExitFailure
+		if withCode != nil {
+			code = withCode.Code()
+		}
+		for i, e := range err.Errors() {
+			if i != 0 {
 				msg += "\n"
 			}
+			msg += "- " + e.Error()
 		}
+		return msg, code
 
 	default:
-		msg = err.Error()
+		return err.Error(), ExitFailure
 	}
-
-	if code == 0 {
-		code = ExitFailure
-	}
-
-	return
 }
 
 type exitError struct {
@@ -159,16 +170,25 @@ func (e *exitError) Unwrap() error { return e.err }
 func (e *exitError) Error() string { return e.err.Error() }
 
 type usageError struct {
-	err          error
-	usage        string
-	showFullHelp bool
+	err         error
+	usage       string
+	helpRequest bool
 }
 
-func (u *usageError) Code() int     { return ExitUsage }
 func (u *usageError) Unwrap() error { return u.err }
 
+func (u *usageError) Code() int {
+	if u.helpRequest {
+		return 0
+	} else {
+		return ExitUsage
+	}
+}
+
 func (u *usageError) Error() string {
-	if u.err == nil {
+	if u.helpRequest {
+		return "help requested"
+	} else if u.err == nil {
 		return "usage error"
 	}
 	return u.err.Error()

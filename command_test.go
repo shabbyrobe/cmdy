@@ -26,19 +26,18 @@ func TestCommand_FlagsArgs(t *testing.T) {
 	tt.MustEqual("bar", bar)
 }
 
-func TestCommand_TemplateDefault(t *testing.T) {
+func TestCommand_Usage(t *testing.T) {
 	tt := assert.WrapTB(t)
 	_ = tt
 
 	c := &testCmd{
-		usage: DefaultUsage + "\n" +
-			"Test",
+		usage:    "Test",
 		synopsis: "synopsis",
 	}
 
 	usage := Run(context.Background(), []string{"-help"}, testBuilder(c))
 	txt, code := FormatError(usage)
-	tt.MustEqual(ExitUsage, code)
+	tt.MustEqual(0, code) // -help should return 0 exit status
 
 	// Warning: brittle test
 	tt.MustEqual("synopsis\n\nUsage: cmdy.test [options] \n\nTest", txt)

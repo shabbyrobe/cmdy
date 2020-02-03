@@ -109,7 +109,6 @@ const (
 
 func buildHelp(
 	cmd Command,
-	showFullHelp bool,
 	path CommandPath,
 	flagSet *FlagSet,
 	argSet *arg.ArgSet,
