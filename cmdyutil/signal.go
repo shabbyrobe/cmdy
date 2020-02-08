@@ -73,6 +73,8 @@ func InterruptibleRun(ctx context.Context, args []string, b cmdy.Builder) (rerr 
 // Interrupt.
 func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, builder cmdy.Builder) (rerr error) {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	done := make(chan error, 1)
 
 	sig := make(chan os.Signal, 1)
@@ -104,8 +106,6 @@ func (r *InterruptRunner) Run(ctx context.Context, name string, args []string, b
 	case <-wait:
 		return ErrInterruptTimeout
 	}
-
-	return nil
 }
 
 func IsInterruptErr(err error) bool {

@@ -2,6 +2,7 @@
 set -o errexit -o nounset -o pipefail
 
 cmd-test() {
+    go vet ./...
     go test -count=1 github.com/shabbyrobe/cmdy/...
 }
 

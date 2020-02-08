@@ -35,10 +35,12 @@ func TestCommand_Usage(t *testing.T) {
 		synopsis: "synopsis",
 	}
 
-	usage := Run(context.Background(), []string{"-help"}, testBuilder(c))
+	runner := NewBufferedRunner()
+	usage := runner.Run(context.Background(), "cmdy", []string{"-help"}, testBuilder(c))
 	txt, code := FormatError(usage)
 	tt.MustEqual(0, code) // -help should return 0 exit status
 
 	// Warning: brittle test
-	tt.MustEqual("synopsis\n\nUsage: cmdy.test [options] \n\nTest", txt)
+	expected := "synopsis\n\nUsage: cmdy [options] \n\nTest"
+	tt.MustEqual(expected, txt)
 }
