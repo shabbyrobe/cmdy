@@ -2,6 +2,7 @@ cmdy: Go library for implementing CLI programs
 ==============================================
 
 [![GoDoc](https://godoc.org/github.com/shabbyrobe/cmdy?status.svg)](https://godoc.org/github.com/shabbyrobe/cmdy)
+![Go](https://github.com/shabbyrobe/cmdy/workflows/Go/badge.svg)
 
 `cmdy` combines the features I like from the `flag` stdlib package with the
 features I like from https://github.com/google/subcommands.
