@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 const expectedUsage = `

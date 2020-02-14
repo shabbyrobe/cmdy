@@ -1,3 +1,3 @@
-module github.com/shabbyrobe/cmdy
+module github.com/ArtProcessors/cmdy
 
 go 1.13

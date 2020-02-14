@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func yep(t *testing.T, in string, out ...string) {

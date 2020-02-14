@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy"
-	"github.com/shabbyrobe/cmdy/internal/cmdstr"
+	"github.com/ArtProcessors/cmdy"
+	"github.com/ArtProcessors/cmdy/internal/cmdstr"
 )
 
 // ExampleTester tests a set of examples from a cmdy.Help.

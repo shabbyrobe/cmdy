@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/shabbyrobe/cmdy/internal/wrap"
+	"github.com/ArtProcessors/cmdy/internal/wrap"
 )
 
 const indent = "        "

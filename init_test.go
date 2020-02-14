@@ -1,7 +1,7 @@
 package cmdy
 
 import (
-	"github.com/shabbyrobe/cmdy/arg"
+	"github.com/ArtProcessors/cmdy/arg"
 )
 
 type testCmd struct {

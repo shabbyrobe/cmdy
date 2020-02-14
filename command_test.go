@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/arg"
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/arg"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func TestCommand_FlagsArgs(t *testing.T) {

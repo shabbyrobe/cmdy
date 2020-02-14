@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/shabbyrobe/cmdy"
+	"github.com/ArtProcessors/cmdy"
 )
 
 const DefaultInterruptTimeout = 2 * time.Second

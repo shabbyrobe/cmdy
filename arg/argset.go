@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shabbyrobe/cmdy/usage"
+	"github.com/ArtProcessors/cmdy/usage"
 )
 
 // An ArgSet represents a set of defined command-line arguments. It is intended

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func TestFormatErrorQuiet(t *testing.T) {

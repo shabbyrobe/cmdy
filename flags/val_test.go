@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy"
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func TestStringList(t *testing.T) {

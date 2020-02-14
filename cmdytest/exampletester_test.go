@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy"
-	"github.com/shabbyrobe/cmdy/arg"
+	"github.com/ArtProcessors/cmdy"
+	"github.com/ArtProcessors/cmdy/arg"
 )
 
 type testCommand struct {

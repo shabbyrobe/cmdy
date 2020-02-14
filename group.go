@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/shabbyrobe/cmdy/arg"
-	"github.com/shabbyrobe/cmdy/internal/wrap"
+	"github.com/ArtProcessors/cmdy/arg"
+	"github.com/ArtProcessors/cmdy/internal/wrap"
 )
 
 // Matcher is a function for choosing a command builder from a list of command builders

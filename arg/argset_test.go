@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func TestArgSetOneString(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/shabbyrobe/cmdy"
+	"github.com/ArtProcessors/cmdy"
 )
 
 // OpenStdinOrFile will check if the program's input is a pipe. If so, it will

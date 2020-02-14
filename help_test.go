@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 const exampleRenderResult = `

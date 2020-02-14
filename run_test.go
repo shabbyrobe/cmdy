@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/shabbyrobe/cmdy/arg"
-	"github.com/shabbyrobe/cmdy/internal/assert"
+	"github.com/ArtProcessors/cmdy/arg"
+	"github.com/ArtProcessors/cmdy/internal/assert"
 )
 
 func TestRun(t *testing.T) {

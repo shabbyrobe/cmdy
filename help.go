@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shabbyrobe/cmdy/arg"
-	"github.com/shabbyrobe/cmdy/internal/wrap"
+	"github.com/ArtProcessors/cmdy/arg"
+	"github.com/ArtProcessors/cmdy/internal/wrap"
 )
 
 // DefaultUsage exists for compatibility with earlier versions.

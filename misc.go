@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/shabbyrobe/cmdy/internal/istty"
+	"github.com/ArtProcessors/cmdy/internal/istty"
 )
 
 // ReaderIsPipe probably returns true if the input is receiving piped data

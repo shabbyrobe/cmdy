@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/shabbyrobe/cmdy/usage"
+	"github.com/ArtProcessors/cmdy/usage"
 )
 
 // FlagDoubleDash allows you to globally configure whether long flag names will
