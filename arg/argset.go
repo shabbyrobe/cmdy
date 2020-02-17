@@ -169,9 +169,10 @@ func (a *ArgSet) RemainingFloat64s(p *[]float64, name string, minmax Range, usag
 	a.RemainingVar((*float64List)(p), name, minmax, usage)
 }
 
-// RemainingVar collects all args after the last defined argument into the
-// slice of ArgVals pointed to by p. If more args are defined after any
-// Remaining method is called, args will panic.
+// RemainingVar collects all args after the last defined argument into the ArgVal pointed
+// to by p. ArgVal should be able to handle multiple calls to Set().
+//
+// If more args are defined after any Remaining method is called, args will panic.
 //
 // See Remaining for an explanation of minmax and usage.
 func (a *ArgSet) RemainingVar(val ArgVal, name string, minmax Range, usage string) {
@@ -270,4 +271,9 @@ func (a *ArgSet) Var(val ArgVal, name string, usage string) {
 
 	arg := &Arg{name, usage, val, dflt, a.optional}
 	a.args = append(a.args, arg)
+}
+
+func (a *ArgSet) VarOptional(val ArgVal, name string, usage string) {
+	a.optional = true
+	a.Var(val, name, usage)
 }
