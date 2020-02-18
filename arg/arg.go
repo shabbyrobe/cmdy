@@ -35,6 +35,8 @@ func (a *Arg) Describe(kind string, hint string) string {
 		return fmt.Sprintf("<%s> (%s)", name, kind)
 	} else if hint != "" {
 		return fmt.Sprintf("<%s> %s", name, hint)
+	} else if a.optional {
+		return fmt.Sprintf("[<%s>]", name)
 	} else {
 		return fmt.Sprintf("<%s>", name)
 	}

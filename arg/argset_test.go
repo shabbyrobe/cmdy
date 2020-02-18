@@ -200,6 +200,65 @@ func TestRemainingAfterOptional(t *testing.T) {
 	})
 }
 
+func TestInvocation(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		tt.MustEqual("", as.Invocation())
+	})
+
+	t.Run("one-required-string", func(t *testing.T) {
+		var s string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.String(&s, "yep", "")
+		tt.MustEqual("<yep>", as.Invocation())
+	})
+
+	t.Run("two-required-strings", func(t *testing.T) {
+		var s1, s2 string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.String(&s1, "yep1", "")
+		as.String(&s2, "yep2", "")
+		tt.MustEqual("<yep1> <yep2>", as.Invocation())
+	})
+
+	t.Run("one-optional-string-with-no-default", func(t *testing.T) {
+		var s1 string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.StringOptional(&s1, "yep1", "", "")
+		tt.MustEqual("[<yep1>]", as.Invocation())
+	})
+
+	t.Run("one-optional-string-with-default", func(t *testing.T) {
+		var s1 string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.StringOptional(&s1, "yep1", "dflt", "")
+		tt.MustEqual("[<yep1>]", as.Invocation())
+	})
+
+	t.Run("one-required-and-one-optional-string", func(t *testing.T) {
+		var s1, s2 string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.String(&s1, "yep1", "")
+		as.StringOptional(&s2, "yep2", "", "")
+		tt.MustEqual("<yep1> [<yep2>]", as.Invocation())
+	})
+
+	t.Run("two-optional-strings", func(t *testing.T) {
+		var s1, s2 string
+		tt := assert.WrapTB(t)
+		as := NewArgSet()
+		as.StringOptional(&s1, "yep1", "", "")
+		as.StringOptional(&s2, "yep2", "", "")
+		tt.MustEqual("[<yep1>] [<yep2>]", as.Invocation())
+	})
+}
+
 type (
 	hintOnlyVar string
 	kindOnlyVar string
