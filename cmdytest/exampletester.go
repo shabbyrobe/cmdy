@@ -35,16 +35,21 @@ func (e *ExampleTester) Examples() cmdy.Examples {
 
 func (e *ExampleTester) TestExamples(t *testing.T) {
 	t.Helper()
-
-	for _, example := range e.Examples() {
-		slug := slugify(example.Desc)
-		name := fmt.Sprintf("%s/%s", e.TestName, slug)
-		t.Run(name, func(t *testing.T) {
-			if err := e.RunExample(example); err != nil {
-				t.Fatal(err)
-			}
-		})
+	for _, ex := range e.Examples() {
+		e.TestExample(t, ex)
 	}
+}
+
+func (e *ExampleTester) TestExample(t *testing.T, example cmdy.Example) {
+	t.Helper()
+
+	slug := slugify(example.Desc)
+	name := fmt.Sprintf("%s/%s", e.TestName, slug)
+	t.Run(name, func(t *testing.T) {
+		if err := e.RunExample(example); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func (e *ExampleTester) RunExample(example cmdy.Example) error {
