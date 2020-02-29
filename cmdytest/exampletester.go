@@ -67,9 +67,9 @@ func (e *ExampleTester) RunExample(example cmdy.Example) error {
 
 	if code == 0 && example.Code == 0 {
 		// all good
-	} else if code > 0 && code != example.Code {
+	} else if example.Code >= 0 && code != example.Code {
 		return fmt.Errorf("unexpected code %d, expected %d: %w", code, example.Code, runErr)
-	} else if code == 0 && example.Code < 0 {
+	} else if example.Code < 0 && code == 0 {
 		return fmt.Errorf("unexpected success, expected non-zero exit code: %w", runErr)
 	}
 
