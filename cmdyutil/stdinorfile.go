@@ -11,18 +11,43 @@ import (
 	"github.com/shabbyrobe/cmdy"
 )
 
+type StdinFlag int
+
+const (
+	HyphenStdin StdinFlag = 1 << iota
+)
+
 // OpenStdinOrFile will check if the program's input is a pipe. If so, it will
 // return stdin, otherwise it will return an open file.
 //
+// NOTE: you should probably use '-' as a filename to trigger stdin (see the
+// HyphenStdin flag). If considering stdin by default, your commands might
+// not work properly in bash while loops:
+//
+//	# Potentially bad ('find stuff' goes to 'mycmd' stdin):
+//	find stuff | while read line; do mycmd; done
+//
+//	# Less bad:
+//	find stuff | while read line; do </dev/null mycmd; done
+//
+// If you require '-' to trigger stdin, this won't happen by default.
+//
 // The returned ReadCloser must always be closed.
-func OpenStdinOrFile(ctx cmdy.Context, fileName string) (rdr io.ReadCloser, err error) {
+func OpenStdinOrFile(ctx cmdy.Context, fileName string, flag StdinFlag) (rdr io.ReadCloser, err error) {
+	var input io.Reader
+	var hasInput bool
+
 	// FIXME: ReaderIsPipe is untestable when using BufferedRunner:
-	input := ctx.Stdin()
-	hasInput := false
-	if buf, ok := input.(*bytes.Buffer); ok {
-		hasInput = buf.Len() > 0
-	} else {
-		hasInput = cmdy.ReaderIsPipe(input)
+	if flag&HyphenStdin == 0 || fileName == "-" {
+		if flag&HyphenStdin != 0 {
+			fileName = ""
+		}
+		input = ctx.Stdin()
+		if buf, ok := input.(*bytes.Buffer); ok {
+			hasInput = buf.Len() > 0
+		} else {
+			hasInput = cmdy.ReaderIsPipe(input)
+		}
 	}
 
 	if hasInput && fileName != "" {
@@ -40,8 +65,8 @@ func OpenStdinOrFile(ctx cmdy.Context, fileName string) (rdr io.ReadCloser, err 
 
 // ReadStdinOrFile will check if the program's input is a pipe. If so, it will read from
 // stdin, otherwise it will read from fileName.
-func ReadStdinOrFile(ctx cmdy.Context, fileName string) (bts []byte, err error) {
-	rdr, err := OpenStdinOrFile(ctx, fileName)
+func ReadStdinOrFile(ctx cmdy.Context, fileName string, flag StdinFlag) (bts []byte, err error) {
+	rdr, err := OpenStdinOrFile(ctx, fileName, flag)
 	if err != nil {
 		return nil, err
 	}

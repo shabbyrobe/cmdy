@@ -184,8 +184,10 @@ func (grp *Group) BuildHelp(into *strings.Builder) error {
 	}
 	sort.Strings(names)
 
-	// +4 == command name, +2 == space between command name and synopsis
-	indent := make([]byte, width+4+2)
+	const cmdNameIndent = 4
+	const cmdSynopsisGap = 2
+
+	indent := make([]byte, width+cmdNameIndent+cmdSynopsisGap)
 	for i := 0; i < len(indent); i++ {
 		indent[i] = ' '
 	}
